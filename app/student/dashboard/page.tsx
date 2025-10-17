@@ -79,9 +79,9 @@ export default function StudentDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('schuelerCode');
-    localStorage.removeItem('schuelerNickname');
-    router.push('/student/code');
+    const { logoutStudent } = useAuthStore.getState();
+    logoutStudent();
+    router.push('/');
   };
 
   if (!schuelerCode || !nickname) {

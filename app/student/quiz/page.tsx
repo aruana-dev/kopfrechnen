@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSocket } from '@/hooks/useSocket';
@@ -16,7 +16,8 @@ export default function StudentQuiz() {
   const [antwort, setAntwort] = useState('');
   const [aufgabeStartzeit, setAufgabeStartzeit] = useState(Date.now());
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
-  const [isSaving, setIsSaving] = useState(false); // Verhindere Mehrfach-Speicherung
+  const isSavingRef = useRef(false); // Verhindere Mehrfach-Speicherung mit Ref statt State
+  const savedSessionsRef = useRef<Set<string>>(new Set()); // Track gespeicherte Sessions
 
   const currentAufgabe = session?.aufgaben[currentAufgabeIndex];
   const hasTempoLimit = session?.settings.tempo.vorgegeben;
@@ -173,10 +174,11 @@ export default function StudentQuiz() {
         setAufgabeStartzeit(Date.now());
       } else {
         // Letzte Aufgabe - zeige Ergebnis direkt
-        if (!isSaving) {
-          setIsSaving(true);
+        if (!isSavingRef.current && !savedSessionsRef.current.has(session.id)) {
+          isSavingRef.current = true;
+          savedSessionsRef.current.add(session.id);
           await saveSoloResult(teilnehmer);
-          router.push('/results');
+          // Navigation passiert in saveSoloResult nach erfolgreichem Speichern
         }
       }
     } else {
@@ -207,13 +209,22 @@ export default function StudentQuiz() {
     
     if (!schuelerCode || !session) {
       console.log('❌ Kein Schüler-Code oder Session');
+      isSavingRef.current = false;
+      return;
+    }
+
+    // Prüfe ob diese Session schon gespeichert wurde
+    const savedKey = `saved_session_${session.id}`;
+    if (localStorage.getItem(savedKey)) {
+      console.log('⚠️ Session bereits gespeichert, überspringe:', session.id);
+      isSavingRef.current = false;
+      router.push('/results');
       return;
     }
 
     const punkte = teilnehmer.antworten.filter((a: any) => a.korrekt).length;
     
-    console.log('💾 Speichere Solo-Ergebnis (NUR EINMAL):', {
-      sessionId: session.id,
+    console.log('💾 Speichere Solo-Ergebnis (Session:', session.id, '):', {
       anzahlAntworten: teilnehmer.antworten.length,
       davonKorrekt: punkte,
       gesamtZeit: teilnehmer.gesamtZeit,
@@ -255,12 +266,20 @@ export default function StudentQuiz() {
         };
         
         await jsonbin.saveSessionResult(result.binId, sessionResult);
+        
+        // Markiere Session als gespeichert
+        localStorage.setItem(savedKey, 'true');
+        
         console.log('✅ Solo-Ergebnis gespeichert in JSONBin.io für Session:', session.id);
       } else {
         console.log('❌ Keine Klasse gefunden für Code:', schuelerCode);
       }
     } catch (error) {
       console.error('❌ Fehler beim Speichern:', error);
+    } finally {
+      isSavingRef.current = false;
+      // Navigation erst NACH dem Speichern
+      router.push('/results');
     }
   };
 
