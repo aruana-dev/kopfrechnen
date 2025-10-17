@@ -1,0 +1,19 @@
+{
+  "name": "kopfrechnen-socket-server",
+  "version": "1.0.0",
+  "description": "Socket.io Server für Kopfrechnen Live-Sessions",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.6.0",
+    "nanoid": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+

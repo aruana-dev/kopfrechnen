@@ -11,7 +11,12 @@ export function useSocket() {
   useEffect(() => {
     // Verwende die globale Socket-Instanz oder erstelle eine neue
     if (!globalSocket) {
-      globalSocket = io('http://localhost:3001', {
+      // Socket URL: Aus Environment Variable oder localhost
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+      
+      console.log('🔌 Verbinde zu Socket.io Server:', socketUrl);
+      
+      globalSocket = io(socketUrl, {
         transports: ['websocket', 'polling'],
         reconnection: true,
       });

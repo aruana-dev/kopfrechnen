@@ -224,6 +224,35 @@ Bei gleicher Anzahl richtiger Antworten gewinnt die kürzere Gesamtzeit!
 4. **Einstellungen anpassen** (Reihen, Operationen, Anzahl)
 5. **Üben!** → Ergebnis wird gespeichert
 
+## 🚀 Deployment
+
+### Vercel (Frontend + Konto-Modus)
+
+Die App kann auf Vercel deployed werden:
+
+```bash
+# Mit GitHub verbinden und pushen
+vercel --prod
+```
+
+**Funktioniert auf Vercel:**
+- ✅ Lehrer-Accounts & Klassen
+- ✅ Schüler Solo-Lern-Modus
+- ✅ Alle JSONBin.io Features
+
+**Funktioniert NICHT auf Vercel:**
+- ❌ Live-Multiplayer (braucht Socket.io)
+
+### Railway.app (Socket.io Server)
+
+Für Live-Multiplayer-Sessions:
+
+1. Socket.io Server auf Railway.app deployen (siehe `RAILWAY_DEPLOYMENT.md`)
+2. URL in Vercel als `NEXT_PUBLIC_SOCKET_URL` setzen
+3. Fertig! Live-Sessions funktionieren jetzt auch in Production
+
+**Details:** Siehe `DEPLOYMENT.md` und `RAILWAY_DEPLOYMENT.md`
+
 ## Lizenz
 
 Privates Projekt für Bildungszwecke.
