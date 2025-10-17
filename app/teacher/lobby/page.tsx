@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSocket } from '@/hooks/useSocket';
 import { useSessionStore } from '@/store/useSessionStore';
 import { useSound } from '@/hooks/useSound';
 
-export default function TeacherLobby() {
+function TeacherLobbyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get('code');
@@ -200,5 +200,17 @@ export default function TeacherLobby() {
         </motion.button>
       </div>
     </div>
+  );
+}
+
+export default function TeacherLobby() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-2xl">Lädt...</p>
+      </div>
+    }>
+      <TeacherLobbyContent />
+    </Suspense>
   );
 }
