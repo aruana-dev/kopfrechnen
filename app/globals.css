@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  @apply bg-gradient-to-br from-kahoot-purple via-kahoot-blue to-kahoot-purple;
+  @apply min-h-screen;
+  @apply text-white;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.kahoot-button {
+  @apply px-8 py-4 rounded-lg font-bold text-xl transition-all duration-300;
+  @apply hover:scale-105 active:scale-95;
+  @apply shadow-2xl;
+}
+
+.kahoot-card {
+  @apply bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl;
+  @apply border border-white/20;
+}
+
+.number-button {
+  @apply w-full aspect-square rounded-2xl font-bold text-3xl;
+  @apply transition-all duration-200;
+  @apply hover:scale-105 active:scale-95;
+  @apply shadow-xl;
+}
+
