@@ -91,16 +91,6 @@ export default function Home() {
         </div>
       </motion.div>
 
-      <motion.div
-        className="absolute bottom-24 text-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.7 }}
-        transition={{ delay: 1 }}
-      >
-        <p className="text-sm">
-          Ähnlich wie Kahoot - aber für Kopfrechnen!
-        </p>
-      </motion.div>
     </div>
   );
 }
