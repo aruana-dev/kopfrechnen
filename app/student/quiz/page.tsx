@@ -294,103 +294,99 @@ export default function StudentQuiz() {
   const progress = ((currentAufgabeIndex + 1) / session.aufgaben.length) * 100;
 
   return (
-    <div className="h-[100dvh] overflow-hidden flex flex-col p-2">
-      {/* Progress Bar */}
-      <div className="w-full bg-white/20 rounded-full h-1.5 mb-1 overflow-hidden flex-shrink-0">
-        <motion.div
-          className="h-full bg-gradient-to-r from-kahoot-green to-kahoot-blue"
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-        />
-      </div>
-
-      {/* Timer */}
-      {hasTempoLimit && timeLeft !== null && (
-        <div className="text-center mb-1 flex-shrink-0">
-          <motion.p
-            className="text-lg md:text-xl font-bold"
-            animate={{ 
-              scale: timeLeft < 1000 ? [1, 1.1, 1] : 1,
-              color: timeLeft < 1000 ? '#e21b3c' : '#ffffff'
-            }}
-            transition={{ duration: 0.3 }}
-          >
-            ⏱️ {(timeLeft / 1000).toFixed(1)}s
-          </motion.p>
+    <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-kahoot-purple via-kahoot-blue to-kahoot-purple">
+      <div className="flex-1 flex flex-col p-3 max-w-2xl mx-auto w-full">
+        {/* Progress Bar */}
+        <div className="w-full bg-white/20 rounded-full h-2 mb-2 overflow-hidden flex-shrink-0">
+          <motion.div
+            className="h-full bg-gradient-to-r from-kahoot-green to-kahoot-blue"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+          />
         </div>
-      )}
 
-      <div className="flex-1 flex flex-col items-center justify-center max-w-2xl mx-auto w-full overflow-hidden">
-        {/* Aufgabe - optimiert für Bildschirmgröße */}
+        {/* Timer */}
+        {hasTempoLimit && timeLeft !== null && (
+          <div className="text-center mb-2 flex-shrink-0">
+            <motion.p
+              className="text-2xl font-bold"
+              animate={{ 
+                scale: timeLeft < 1000 ? [1, 1.1, 1] : 1,
+                color: timeLeft < 1000 ? '#e21b3c' : '#ffffff'
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              ⏱️ {(timeLeft / 1000).toFixed(1)}s
+            </motion.p>
+          </div>
+        )}
+
+        {/* Aufgaben-Info */}
+        <div className="text-center mb-2 flex-shrink-0">
+          <p className="text-sm opacity-80">
+            Aufgabe {currentAufgabeIndex + 1} von {session.aufgaben.length}
+          </p>
+        </div>
+
+        {/* Aufgabe - GROSS UND DEUTLICH */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentAufgabe.id}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
-            className="w-full flex flex-col justify-center"
-            style={{ height: '100%' }}
+            className="bg-white/20 backdrop-blur-lg rounded-2xl p-6 mb-3 flex-shrink-0 border-2 border-white/30"
           >
-            {/* Aufgaben-Info */}
-            <div className="text-center mb-1 flex-shrink-0">
-              <p className="text-xs md:text-sm opacity-80">
-                {currentAufgabeIndex + 1} / {session.aufgaben.length}
-              </p>
-            </div>
-
-            {/* Aufgabe */}
-            <div className="bg-white/10 backdrop-blur-lg rounded-lg p-2 mb-2 flex-shrink-0">
-              <p className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center">
-                {currentAufgabe.zahl1} {getOperationSymbol(currentAufgabe.operation)} {currentAufgabe.zahl2}
-              </p>
-            </div>
-
-            {/* Antwort Display */}
-            <div className="bg-white text-kahoot-purple rounded-lg p-2 mb-2 flex-shrink-0">
-              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-center">
-                {antwort || '_'}
-              </p>
-            </div>
-
-            {/* Nummernpad - RESPONSIVE */}
-            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-2 flex-shrink-0">
-              {['7', '8', '9', '4', '5', '6', '1', '2', '3', '-', '0', '.'].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => handleNumberClick(num)}
-                  className="aspect-square rounded-lg bg-gradient-to-br from-kahoot-blue to-kahoot-purple text-white font-bold text-xl sm:text-2xl md:text-3xl shadow-lg active:scale-95 transition-transform touch-manipulation"
-                >
-                  {num}
-                </button>
-              ))}
-            </div>
-
-            {/* Aktions-Buttons - nur wenn nicht Direkt-Weiter */}
-            {!session?.settings.direktWeiter && (
-              <div className="grid grid-cols-2 gap-1.5 sm:gap-2 flex-shrink-0">
-                <button
-                  onClick={() => handleNumberClick('C')}
-                  className="py-2 sm:py-3 rounded-lg bg-kahoot-red font-bold text-base sm:text-lg active:scale-95 transition-transform"
-                >
-                  Löschen
-                </button>
-
-                <button
-                  onClick={() => handleWeiter(false)}
-                  className="py-2 sm:py-3 rounded-lg bg-kahoot-green font-bold text-base sm:text-lg active:scale-95 transition-transform"
-                >
-                  Weiter →
-                </button>
-              </div>
-            )}
-            
-            {session?.settings.direktWeiter && (
-              <p className="text-center text-xs sm:text-sm opacity-70 flex-shrink-0 mt-1">
-                ⚡ Auto-Weiter • Tastatur: Backspace/Enter
-              </p>
-            )}
+            <p className="text-4xl sm:text-5xl md:text-6xl font-bold text-center text-white">
+              {currentAufgabe.zahl1} {getOperationSymbol(currentAufgabe.operation)} {currentAufgabe.zahl2}
+            </p>
           </motion.div>
         </AnimatePresence>
+
+        {/* Antwort Display */}
+        <div className="bg-white text-kahoot-purple rounded-xl p-4 mb-3 flex-shrink-0">
+          <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-center min-h-[1.2em]">
+            {antwort || '_'}
+          </p>
+        </div>
+
+        {/* Nummernpad - RESPONSIVE */}
+        <div className="grid grid-cols-3 gap-2 mb-2 flex-shrink-0">
+          {['7', '8', '9', '4', '5', '6', '1', '2', '3', '-', '0', '.'].map((num) => (
+            <button
+              key={num}
+              onClick={() => handleNumberClick(num)}
+              className="aspect-square rounded-xl bg-gradient-to-br from-kahoot-blue to-kahoot-purple text-white font-bold text-2xl sm:text-3xl md:text-4xl shadow-xl active:scale-95 transition-transform touch-manipulation"
+            >
+              {num}
+            </button>
+          ))}
+        </div>
+
+        {/* Aktions-Buttons - nur wenn nicht Direkt-Weiter */}
+        {!session?.settings.direktWeiter && (
+          <div className="grid grid-cols-2 gap-2 flex-shrink-0">
+            <button
+              onClick={() => handleNumberClick('C')}
+              className="py-3 rounded-xl bg-kahoot-red font-bold text-lg sm:text-xl active:scale-95 transition-transform shadow-lg"
+            >
+              Löschen
+            </button>
+
+            <button
+              onClick={() => handleWeiter(false)}
+              className="py-3 rounded-xl bg-kahoot-green font-bold text-lg sm:text-xl active:scale-95 transition-transform shadow-lg"
+            >
+              Weiter →
+            </button>
+          </div>
+        )}
+        
+        {session?.settings.direktWeiter && (
+          <p className="text-center text-sm opacity-70 flex-shrink-0">
+            ⚡ Auto-Weiter • Tastatur OK
+          </p>
+        )}
       </div>
     </div>
   );
