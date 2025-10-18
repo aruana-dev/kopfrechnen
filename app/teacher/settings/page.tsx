@@ -28,9 +28,18 @@ export default function SettingsPage() {
   // LocalStorage Debug
   const [localStorageData, setLocalStorageData] = useState<any>({});
 
+  const [isHydrated, setIsHydrated] = useState(false);
+
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    
     if (!teacher) {
       router.push('/auth/login');
+      return;
     }
     
     // Lade localStorage Daten
@@ -38,7 +47,15 @@ export default function SettingsPage() {
       const teacherBins = JSON.parse(localStorage.getItem('teacherBins') || '{}');
       setLocalStorageData(teacherBins);
     }
-  }, [teacher, router]);
+  }, [teacher, router, isHydrated]);
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-2xl">Lädt...</p>
+      </div>
+    );
+  }
 
   const handleCleanLocalStorage = () => {
     if (!confirm('LocalStorage wirklich bereinigen? Alle gespeicherten Zuordnungen gehen verloren!')) return;

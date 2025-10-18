@@ -19,7 +19,16 @@ export default function StudentDashboard() {
     gesamtAufgaben: 0,
   });
 
+  const [isHydrated, setIsHydrated] = useState(false);
+
   useEffect(() => {
+    // Warte auf Client-Side Hydration
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    
     const code = localStorage.getItem('schuelerCode');
     const nick = localStorage.getItem('schuelerNickname');
     
@@ -31,7 +40,15 @@ export default function StudentDashboard() {
     setSchuelerCode(code);
     setNickname(nick);
     loadMeineDaten();
-  }, [router]);
+  }, [router, isHydrated]);
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-2xl">Lädt...</p>
+      </div>
+    );
+  }
 
   const loadMeineDaten = async () => {
     const code = localStorage.getItem('schuelerCode');

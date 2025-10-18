@@ -293,9 +293,33 @@ export default function StudentQuiz() {
 
   const progress = ((currentAufgabeIndex + 1) / session.aufgaben.length) * 100;
 
+  const handleAbbrechen = () => {
+    if (confirm('Quiz wirklich abbrechen? Der Fortschritt geht verloren.')) {
+      const isSoloMode = session.teilnehmer.length === 1 && session.teilnehmer[0].id === 'self';
+      
+      if (isSoloMode) {
+        // Solo: Zurück zum Dashboard
+        useSessionStore.getState().reset();
+        router.push('/student/dashboard');
+      } else {
+        // Multi-Player: Zurück zur Startseite
+        useSessionStore.getState().reset();
+        router.push('/');
+      }
+    }
+  };
+
   return (
     <div className="h-screen w-screen overflow-hidden flex flex-col bg-gradient-to-br from-kahoot-purple via-kahoot-blue to-kahoot-purple">
       <div className="flex-1 flex flex-col p-3 max-w-2xl mx-auto w-full">
+        {/* Abbrechen Button */}
+        <button
+          onClick={handleAbbrechen}
+          className="absolute top-4 left-4 z-50 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg font-bold text-sm transition-all"
+        >
+          ✖️ Abbrechen
+        </button>
+
         {/* Progress Bar */}
         <div className="w-full bg-white/20 rounded-full h-2 mb-2 overflow-hidden flex-shrink-0">
           <motion.div

@@ -12,14 +12,30 @@ export default function FortschrittPage() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [isHydrated, setIsHydrated] = useState(false);
+
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    
     if (!teacher || !activeKlasse) {
       router.push('/teacher/dashboard');
       return;
     }
     
     setSessions(activeKlasse.sessions || []);
-  }, [teacher, activeKlasse, router]);
+  }, [teacher, activeKlasse, router, isHydrated]);
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-2xl">Lädt...</p>
+      </div>
+    );
+  }
 
   const handleDeleteSchuelerSession = async (schuelerCode: string, sessionId: string, schuelerName: string) => {
     if (!activeKlasse) return;

@@ -16,7 +16,15 @@ export default function StudentLearnPage() {
   const [schuelerCode, setSchuelerCode] = useState('');
   const [nickname, setNickname] = useState('');
 
+  const [isHydrated, setIsHydrated] = useState(false);
+
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    
     const code = localStorage.getItem('schuelerCode');
     const nick = localStorage.getItem('schuelerNickname');
     
@@ -27,7 +35,15 @@ export default function StudentLearnPage() {
     
     setSchuelerCode(code);
     setNickname(nick);
-  }, [router]);
+  }, [router, isHydrated]);
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-2xl">Lädt...</p>
+      </div>
+    );
+  }
 
   const [settings, setSettings] = useState<SessionSettings>({
     reihen: [2, 3, 5],

@@ -17,13 +17,29 @@ export default function KlassePage() {
   const [editingSchueler, setEditingSchueler] = useState<Schueler | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
 
+  const [isHydrated, setIsHydrated] = useState(false);
+
   useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    
     if (!teacher || !activeKlasse) {
       router.push('/teacher/dashboard');
       return;
     }
     setSchueler(activeKlasse.schueler || []);
-  }, [teacher, activeKlasse, router]);
+  }, [teacher, activeKlasse, router, isHydrated]);
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-2xl">Lädt...</p>
+      </div>
+    );
+  }
 
   const handleAddSchueler = async () => {
     if (!activeKlasse || !vornamen.trim()) return;
