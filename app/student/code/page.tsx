@@ -27,13 +27,10 @@ export default function StudentCodePage() {
       
       if (data.success) {
         setMode('nickname');
-      } else {
-        // Code ist ungültig, aber wir zeigen den Nickname-Modus trotzdem
-        setMode('nickname');
       }
+      // Wenn nicht erfolgreich, bleiben wir im Code-Modus und zeigen Fehler an
     } catch (err) {
       console.error('Fehler beim Validieren des Codes:', err);
-      setMode('nickname');
     }
   };
 

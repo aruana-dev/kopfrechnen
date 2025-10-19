@@ -238,8 +238,9 @@ class JSONBinClient {
 
   // Klasse erstellen
   async createKlasse(teacherId: string, name: string): Promise<Klasse> {
-    const klasse: Klasse = {
-      id: `klasse_${Date.now()}`,
+    // Erstelle temporäre Klasse ohne ID
+    const tempKlasse = {
+      id: '', // Wird nach Erstellung gesetzt
       name,
       teacherId,
       schueler: [],
@@ -247,8 +248,14 @@ class JSONBinClient {
       created: Date.now(),
     };
 
-    const { id } = await this.createBin(klasse, `klasse_${name}_${Date.now()}`);
-    return { ...klasse, id };
+    // Erstelle Bin und erhalte echte ID
+    const { id } = await this.createBin(tempKlasse, `klasse_${name}_${Date.now()}`);
+    
+    // Aktualisiere Klasse mit echter Bin-ID
+    const klasse: Klasse = { ...tempKlasse, id };
+    await this.updateBin(id, klasse);
+    
+    return klasse;
   }
 
   // Schüler-Codes generieren
@@ -360,7 +367,7 @@ class JSONBinClient {
         id: `schueler_${Date.now()}_${i}`,
         code,
         vorname: vornamen[i].trim(),
-        klasseId: klasse.id,
+        klasseId: klasseBinId, // Verwende die echte Bin-ID, nicht klasse.id
         created: Date.now(),
       };
       neueSchueler.push(schueler);
