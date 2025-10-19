@@ -448,14 +448,36 @@ class JSONBinClient {
     await this.updateBin(teacherBinId, teacher);
   }
 
+  // Prüfe ob Benutzername bereits existiert (über alle Bins)
+  async checkUsernameExists(username: string): Promise<boolean> {
+    try {
+      const bins = await this.listBins();
+      
+      for (const bin of bins) {
+        try {
+          const data = await this.readBin(bin.id);
+          if (data && data.username === username) {
+            return true;
+          }
+        } catch (error) {
+          // Ignoriere Fehler beim Lesen einzelner Bins
+          continue;
+        }
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Fehler beim Prüfen des Benutzernamens:', error);
+      return false;
+    }
+  }
+
   // Lehrer-Benutzername ändern
   async updateTeacherUsername(teacherBinId: string, oldUsername: string, newUsername: string): Promise<void> {
     // Prüfe ob neuer Username schon existiert
-    if (typeof window !== 'undefined') {
-      const teacherMap = JSON.parse(localStorage.getItem('teacherBins') || '{}');
-      if (teacherMap[newUsername] && teacherMap[newUsername] !== teacherBinId) {
-        throw new Error('Benutzername bereits vergeben!');
-      }
+    const usernameExists = await this.checkUsernameExists(newUsername);
+    if (usernameExists) {
+      throw new Error('Benutzername bereits vergeben!');
     }
 
     // Update Teacher-Objekt

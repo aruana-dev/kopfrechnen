@@ -30,14 +30,12 @@ export default function LoginPage() {
           setError('Ungültiger Benutzername oder Passwort');
         }
       } else {
-        // Check ob Username schon existiert
-        if (typeof window !== 'undefined') {
-          const teacherMap = JSON.parse(localStorage.getItem('teacherBins') || '{}');
-          if (teacherMap[username]) {
-            setError('Benutzername bereits vergeben!');
-            setLoading(false);
-            return;
-          }
+        // Check ob Username schon existiert über jsonbin
+        const usernameExists = await jsonbin.checkUsernameExists(username);
+        if (usernameExists) {
+          setError('Benutzername bereits vergeben!');
+          setLoading(false);
+          return;
         }
         
         const teacher = await jsonbin.registerTeacher(username, password);
