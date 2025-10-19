@@ -3,17 +3,15 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { jsonbin, SessionResult } from '@/lib/jsonbin';
 
 export default function StudentSessionDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { activeKlasse } = useAuthStore();
+  const { schueler } = useServerAuthStore();
   const [session, setSession] = useState<SessionResult | null>(null);
   const [ergebnis, setErgebnis] = useState<any>(null);
-  const [schuelerCode, setSchuelerCode] = useState('');
-  const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(true);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -24,29 +22,21 @@ export default function StudentSessionDetailPage() {
   useEffect(() => {
     if (!isHydrated) return;
     
-    const code = localStorage.getItem('schuelerCode');
-    const nick = localStorage.getItem('schuelerNickname');
-    
-    if (!code || !nick) {
+    if (!schueler) {
       router.push('/student/code');
       return;
     }
     
-    setSchuelerCode(code);
-    setNickname(nick);
     loadSessionData();
-  }, [router, isHydrated, params.sessionId]);
+  }, [router, isHydrated, params.sessionId, schueler]);
 
   const loadSessionData = async () => {
-    if (!params.sessionId) return;
+    if (!params.sessionId || !schueler) return;
     
     setLoading(true);
     try {
-      const code = localStorage.getItem('schuelerCode');
-      if (!code) return;
-
       // Lade Klasse direkt über jsonbin
-      const result = await jsonbin.findKlasseBySchuelerCode(code);
+      const result = await jsonbin.findKlasseBySchuelerCode(schueler.code);
       if (!result) {
         router.push('/student/code');
         return;
@@ -64,7 +54,7 @@ export default function StudentSessionDetailPage() {
       setSession(session);
       
       // Finde das Ergebnis des Schülers
-      const ergebnis = session.ergebnisse.find(erg => erg.schuelerCode === code);
+      const ergebnis = session.ergebnisse.find(erg => erg.schuelerCode === schueler.code);
       if (!ergebnis) {
         router.push('/student/ergebnisse');
         return;

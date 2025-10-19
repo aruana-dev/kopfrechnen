@@ -3,15 +3,13 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { jsonbin, SessionResult } from '@/lib/jsonbin';
 
 export default function StudentErgebnissePage() {
   const router = useRouter();
-  const { activeKlasse } = useAuthStore();
+  const { schueler } = useServerAuthStore();
   const [sessions, setSessions] = useState<SessionResult[]>([]);
-  const [schuelerCode, setSchuelerCode] = useState('');
-  const [nickname, setNickname] = useState('');
   const [loading, setLoading] = useState(true);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -22,27 +20,21 @@ export default function StudentErgebnissePage() {
   useEffect(() => {
     if (!isHydrated) return;
     
-    const code = localStorage.getItem('schuelerCode');
-    const nick = localStorage.getItem('schuelerNickname');
-    
-    if (!code || !nick) {
+    if (!schueler) {
       router.push('/student/code');
       return;
     }
     
-    setSchuelerCode(code);
-    setNickname(nick);
     loadSessions();
-  }, [router, isHydrated]);
+  }, [router, isHydrated, schueler]);
 
   const loadSessions = async () => {
+    if (!schueler) return;
+    
     setLoading(true);
     try {
-      const code = localStorage.getItem('schuelerCode');
-      if (!code) return;
-
       // Lade Klasse direkt über jsonbin
-      const result = await jsonbin.findKlasseBySchuelerCode(code);
+      const result = await jsonbin.findKlasseBySchuelerCode(schueler.code);
       if (!result) {
         router.push('/student/code');
         return;
@@ -53,7 +45,7 @@ export default function StudentErgebnissePage() {
       // Lade alle Sessions für diesen Schüler
       const alleSessions = klasse.sessions || [];
       const schuelerSessions = alleSessions.filter(session => 
-        session.ergebnisse.some(erg => erg.schuelerCode === code)
+        session.ergebnisse.some(erg => erg.schuelerCode === schueler.code)
       );
       
       // Sortiere nach Datum (neueste zuerst)
@@ -124,7 +116,7 @@ export default function StudentErgebnissePage() {
               📊 Meine Ergebnisse
             </h1>
             <p className="text-xl opacity-80">
-              Hallo {nickname}! Hier siehst du alle deine Übungen
+              Hallo {schueler.nickname || schueler.vorname}! Hier siehst du alle deine Übungen
             </p>
           </div>
         </div>

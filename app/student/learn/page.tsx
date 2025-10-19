@@ -5,16 +5,14 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { SessionSettings, Operation } from '@/types';
 import { useSessionStore } from '@/store/useSessionStore';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { generiereAufgaben } from '@/lib/aufgaben-generator';
 import { nanoid } from 'nanoid';
 
 export default function StudentLearnPage() {
   const router = useRouter();
   const { setSession, setRole } = useSessionStore();
-  const { activeKlasse } = useAuthStore();
-  const [schuelerCode, setSchuelerCode] = useState('');
-  const [nickname, setNickname] = useState('');
+  const { schueler } = useServerAuthStore();
   const [settings, setSettings] = useState<SessionSettings>({
     reihen: [2, 3, 5],
     operationen: ['multiplikation'],
@@ -38,17 +36,11 @@ export default function StudentLearnPage() {
   useEffect(() => {
     if (!isHydrated) return;
     
-    const code = localStorage.getItem('schuelerCode');
-    const nick = localStorage.getItem('schuelerNickname');
-    
-    if (!code || !nick) {
+    if (!schueler) {
       router.push('/student/code');
       return;
     }
-    
-    setSchuelerCode(code);
-    setNickname(nick);
-  }, [router, isHydrated]);
+  }, [router, isHydrated, schueler]);
 
   if (!isHydrated) {
     return (
@@ -112,7 +104,7 @@ export default function StudentLearnPage() {
     router.push('/student/quiz');
   };
 
-  if (!schuelerCode || !nickname) {
+  if (!schueler) {
     return null;
   }
 

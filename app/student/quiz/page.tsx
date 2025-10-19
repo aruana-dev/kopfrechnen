@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSocket } from '@/hooks/useSocket';
 import { useSessionStore } from '@/store/useSessionStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { getOperationSymbol } from '@/lib/aufgaben-generator';
 import { jsonbin } from '@/lib/jsonbin';
 
@@ -204,23 +205,16 @@ export default function StudentQuiz() {
   };
 
   const saveSoloResult = async (teilnehmer: any) => {
-    const schuelerCode = localStorage.getItem('schuelerCode');
-    const nickname = localStorage.getItem('schuelerNickname');
+    const { schueler } = useServerAuthStore.getState();
     
-    if (!schuelerCode || !session) {
-      console.log('❌ Kein Schüler-Code oder Session');
+    if (!schueler || !session) {
+      console.log('❌ Kein Schüler eingeloggt oder Session');
       isSavingRef.current = false;
       return;
     }
 
-    // Prüfe ob diese Session schon gespeichert wurde
-    const savedKey = `saved_session_${session.id}`;
-    if (localStorage.getItem(savedKey)) {
-      console.log('⚠️ Session bereits gespeichert, überspringe:', session.id);
-      isSavingRef.current = false;
-      router.push('/results');
-      return;
-    }
+    const schuelerCode = schueler.code;
+    const nickname = schueler.nickname;
 
     const punkte = teilnehmer.antworten.filter((a: any) => a.korrekt).length;
     
@@ -282,9 +276,6 @@ export default function StudentQuiz() {
         };
         
         await jsonbin.saveSessionResult(result.binId, sessionResult);
-        
-        // Markiere Session als gespeichert
-        localStorage.setItem(savedKey, 'true');
         
         console.log('✅ Solo-Ergebnis gespeichert in JSONBin.io für Session:', session.id);
       } else {
