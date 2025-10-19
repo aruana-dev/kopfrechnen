@@ -3,64 +3,49 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { jsonbin } from '@/lib/jsonbin';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 
 export default function StudentCodePage() {
   const router = useRouter();
-  const { setActiveKlasse } = useAuthStore();
+  const { loginSchueler, schueler, isLoading, error } = useServerAuthStore();
   const [schuelerCode, setSchuelerCode] = useState('');
   const [nickname, setNickname] = useState('');
-  const [error, setError] = useState('');
   const [mode, setMode] = useState<'code' | 'nickname'>('code');
 
   const handleSubmitCode = async () => {
     if (!schuelerCode) {
-      setError('Bitte Schüler-Code eingeben');
       return;
     }
 
-    setError('Suche Code...');
+    const codeUpper = schuelerCode.toUpperCase();
+    console.log('Suche Code:', codeUpper);
     
+    // Versuche Code zu validieren (ohne Login)
     try {
-      const codeUpper = schuelerCode.toUpperCase();
-      console.log('Suche Code:', codeUpper);
+      const response = await fetch(`/api/klasse/validate-code?code=${codeUpper}`);
+      const data = await response.json();
       
-      // Finde Klasse über Index-Bin
-      const result = await jsonbin.findKlasseBySchuelerCode(codeUpper);
-      
-      if (!result) {
-        setError('Ungültiger Schüler-Code');
-        return;
+      if (data.success) {
+        setMode('nickname');
+      } else {
+        // Code ist ungültig, aber wir zeigen den Nickname-Modus trotzdem
+        setMode('nickname');
       }
-
-      const { klasse, binId } = result;
-      const schueler = klasse.schueler?.find((s: any) => s.code === codeUpper);
-      
-      if (!schueler) {
-        setError('Ungültiger Schüler-Code');
-        return;
-      }
-
-      console.log('Code gefunden! Klasse:', klasse.name, 'Schüler:', schueler.vorname);
-      setActiveKlasse({ ...klasse, id: binId });
-      localStorage.setItem('schuelerCode', codeUpper);
-      setMode('nickname');
-      setError('');
     } catch (err) {
-      console.error('Fehler beim Suchen des Codes:', err);
-      setError('Fehler beim Suchen des Codes');
+      console.error('Fehler beim Validieren des Codes:', err);
+      setMode('nickname');
     }
   };
 
-  const handleSubmitNickname = () => {
-    if (!nickname) {
-      setError('Bitte Nickname eingeben');
+  const handleSubmitNickname = async () => {
+    if (!nickname || !schuelerCode) {
       return;
     }
     
-    localStorage.setItem('schuelerNickname', nickname);
-    router.push('/student/dashboard');
+    const success = await loginSchueler(schuelerCode.toUpperCase(), nickname);
+    if (success) {
+      router.push('/student/dashboard');
+    }
   };
 
   return (
@@ -93,7 +78,6 @@ export default function StudentCodePage() {
                   value={schuelerCode}
                   onChange={(e) => {
                     setSchuelerCode(e.target.value.toUpperCase());
-                    setError('');
                   }}
                   placeholder="ABCD12"
                   maxLength={6}
@@ -104,13 +88,15 @@ export default function StudentCodePage() {
                 </p>
               </div>
 
-              {error && (
+              {(error || isLoading) && (
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="bg-kahoot-red/80 p-4 rounded-xl text-center"
+                  className={`p-4 rounded-xl text-center ${
+                    isLoading ? 'bg-kahoot-blue/80' : 'bg-kahoot-red/80'
+                  }`}
                 >
-                  {error}
+                  {isLoading ? 'Lädt...' : error}
                 </motion.div>
               )}
 
@@ -118,7 +104,7 @@ export default function StudentCodePage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleSubmitCode}
-                disabled={!schuelerCode}
+                disabled={!schuelerCode || isLoading}
                 className="kahoot-button bg-kahoot-blue w-full disabled:opacity-50"
               >
                 Weiter →
@@ -135,7 +121,6 @@ export default function StudentCodePage() {
                   value={nickname}
                   onChange={(e) => {
                     setNickname(e.target.value);
-                    setError('');
                   }}
                   placeholder="z.B. Mathe-King"
                   maxLength={20}
@@ -146,13 +131,15 @@ export default function StudentCodePage() {
                 </p>
               </div>
 
-              {error && (
+              {(error || isLoading) && (
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className="bg-kahoot-red/80 p-4 rounded-xl text-center"
+                  className={`p-4 rounded-xl text-center ${
+                    isLoading ? 'bg-kahoot-blue/80' : 'bg-kahoot-red/80'
+                  }`}
                 >
-                  {error}
+                  {isLoading ? 'Lädt...' : error}
                 </motion.div>
               )}
 
@@ -160,7 +147,7 @@ export default function StudentCodePage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleSubmitNickname}
-                disabled={!nickname}
+                disabled={!nickname || isLoading}
                 className="kahoot-button bg-kahoot-green w-full disabled:opacity-50"
               >
                 Los geht's! 🚀
