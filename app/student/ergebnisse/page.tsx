@@ -163,7 +163,7 @@ export default function StudentErgebnissePage() {
                     {Math.round(sessions.reduce((sum, session) => {
                       const erg = session.ergebnisse.find(e => e.schuelerCode === schueler?.code);
                       return sum + (erg?.durchschnittsZeit || 0);
-                    }, 0) / sessions.length)}
+                    }, 0) / sessions.length / 1000)}s
                   </div>
                   <div className="text-sm opacity-70">Ø Zeit/Aufgabe</div>
                 </div>
@@ -226,7 +226,7 @@ export default function StudentErgebnissePage() {
                           </div>
                           <div className="flex items-center gap-1">
                             <span className="text-kahoot-blue">⏱️</span>
-                            <span>{Math.round(ergebnis.durchschnittsZeit)}s Ø</span>
+                            <span>{(ergebnis.durchschnittsZeit / 1000).toFixed(1)}s Ø</span>
                           </div>
                         </div>
                       </div>
