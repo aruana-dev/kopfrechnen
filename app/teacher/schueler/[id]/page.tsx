@@ -54,7 +54,7 @@ export default function SchuelerProfilPage() {
       }
       
       // Finde den Schüler
-      const schueler = updatedKlasse.schueler?.find(s => s.id === params.id);
+      const schueler = (updatedKlasse as any).schueler?.find((s: any) => s.id === params.id);
       if (!schueler) {
         router.push('/teacher/klasse');
         return;
@@ -63,9 +63,9 @@ export default function SchuelerProfilPage() {
       setSchueler(schueler);
       
       // Lade alle Sessions für diesen Schüler
-      const alleSessions = updatedKlasse.sessions || [];
-      const schuelerSessions = alleSessions.filter(session => 
-        session.ergebnisse.some(erg => erg.schuelerCode === schueler.code)
+      const alleSessions = (updatedKlasse as any).sessions || [];
+      const schuelerSessions = alleSessions.filter((session: any) => 
+        session.ergebnisse.some((erg: any) => erg.schuelerCode === schueler.code)
       );
       
       setSessions(schuelerSessions);

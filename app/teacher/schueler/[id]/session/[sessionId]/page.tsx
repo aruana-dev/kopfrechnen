@@ -44,7 +44,7 @@ export default function SessionDetailPage() {
       }
       
       // Finde den Schüler
-      const schueler = updatedKlasse.schueler?.find(s => s.id === params.id);
+      const schueler = (updatedKlasse as any).schueler?.find((s: any) => s.id === params.id);
       if (!schueler) {
         router.push('/teacher/klasse');
         return;
@@ -53,7 +53,7 @@ export default function SessionDetailPage() {
       setSchueler(schueler);
       
       // Finde die Session
-      const session = updatedKlasse.sessions?.find(s => s.sessionId === params.sessionId);
+      const session = (updatedKlasse as any).sessions?.find((s: any) => s.sessionId === params.sessionId);
       if (!session) {
         router.push(`/teacher/schueler/${params.id}`);
         return;
@@ -62,7 +62,7 @@ export default function SessionDetailPage() {
       setSession(session);
       
       // Finde das Ergebnis des Schülers
-      const ergebnis = session.ergebnisse.find(erg => erg.schuelerCode === schueler.code);
+      const ergebnis = session.ergebnisse.find((erg: any) => erg.schuelerCode === schueler.code);
       if (!ergebnis) {
         router.push(`/teacher/schueler/${params.id}`);
         return;
