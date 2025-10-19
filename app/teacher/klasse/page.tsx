@@ -297,9 +297,24 @@ export default function KlassePage() {
               whileTap={{ scale: 0.95 }}
               onClick={handleAddSchueler}
               disabled={loading || !vornamen.trim()}
-              className="px-8 py-3 bg-kahoot-green rounded-lg font-bold disabled:opacity-50 self-start mt-8"
+              className="px-8 py-3 bg-kahoot-green rounded-lg font-bold disabled:opacity-50 self-start mt-8 relative overflow-hidden"
             >
-              {loading ? '...' : 'Hinzufügen'}
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Füge hinzu...</span>
+                </div>
+              ) : (
+                'Hinzufügen'
+              )}
+              {loading && (
+                <motion.div
+                  className="absolute inset-0 bg-white/20"
+                  initial={{ x: '-100%' }}
+                  animate={{ x: '100%' }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                />
+              )}
             </motion.button>
           </div>
         </div>
@@ -348,9 +363,24 @@ export default function KlassePage() {
                   <button
                     onClick={handleSaveEdit}
                     disabled={loading}
-                    className="flex-1 py-3 rounded-lg bg-kahoot-green font-bold disabled:opacity-50"
+                    className="flex-1 py-3 rounded-lg bg-kahoot-green font-bold disabled:opacity-50 relative overflow-hidden"
                   >
-                    {loading ? '...' : 'Speichern'}
+                    {loading ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <span>Speichere...</span>
+                      </div>
+                    ) : (
+                      'Speichern'
+                    )}
+                    {loading && (
+                      <motion.div
+                        className="absolute inset-0 bg-white/20"
+                        initial={{ x: '-100%' }}
+                        animate={{ x: '100%' }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                    )}
                   </button>
                 </div>
               </div>
@@ -390,10 +420,15 @@ export default function KlassePage() {
                       </button>
                       <button
                         onClick={() => handleDeleteSchueler(s.id)}
-                        className="text-xl hover:scale-110 transition-transform"
-                        title="Löschen"
+                        disabled={loading}
+                        className="text-xl hover:scale-110 transition-transform disabled:opacity-50 relative"
+                        title={loading ? "Lösche..." : "Löschen"}
                       >
-                        🗑️
+                        {loading ? (
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : (
+                          "🗑️"
+                        )}
                       </button>
                     </div>
                   </div>
