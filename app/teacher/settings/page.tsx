@@ -62,9 +62,9 @@ export default function SettingsPage() {
     
     if (typeof window !== 'undefined') {
       // Nur aktuellen Teacher behalten
-      if (teacher) {
+      if (lehrer) {
         const newMap: any = {};
-        newMap[teacher.username] = teacher.id;
+        newMap[lehrer.username] = lehrer.id;
         localStorage.setItem('teacherBins', JSON.stringify(newMap));
         setLocalStorageData(newMap);
       }
@@ -72,18 +72,17 @@ export default function SettingsPage() {
   };
 
   const handleUsernameChange = async () => {
-    if (!teacher || !newUsername.trim()) return;
+    if (!lehrer || !newUsername.trim()) return;
     
     setUsernameLoading(true);
     setUsernameError('');
     setUsernameSuccess(false);
 
     try {
-      await jsonbin.updateTeacherUsername(teacher.id, teacher.username, newUsername.trim());
+      await jsonbin.updateTeacherUsername(lehrer.id, lehrer.username, newUsername.trim());
       
-      // Update lokalen Teacher-State
-      const updatedTeacher = { ...teacher, username: newUsername.trim() };
-      setTeacher(updatedTeacher);
+      // Hinweis: Store wird beim nächsten Laden aktualisiert
+      // Keine direkte setTeacher Methode mehr im useServerAuthStore
       
       setUsernameSuccess(true);
       setNewUsername('');
@@ -97,7 +96,7 @@ export default function SettingsPage() {
   };
 
   const handlePasswordChange = async () => {
-    if (!teacher) return;
+    if (!lehrer) return;
     
     if (!currentPassword || !newPassword || !confirmPassword) {
       setPasswordError('Bitte alle Felder ausfüllen!');
@@ -121,7 +120,7 @@ export default function SettingsPage() {
     try {
       // Prüfe aktuelles Passwort
       const currentHash = await jsonbin.hashPassword(currentPassword);
-      const teacherData = await jsonbin.readBin(teacher.id);
+      const teacherData = await jsonbin.readBin(lehrer.id);
       
       if (teacherData.passwordHash !== currentHash) {
         setPasswordError('Aktuelles Passwort ist falsch!');
@@ -130,7 +129,7 @@ export default function SettingsPage() {
       }
 
       // Update Passwort
-      await jsonbin.updateTeacherPassword(teacher.id, newPassword);
+      await jsonbin.updateTeacherPassword(lehrer.id, newPassword);
       
       setPasswordSuccess(true);
       setCurrentPassword('');
@@ -145,7 +144,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (!teacher) return null;
+  if (!lehrer) return null;
 
   return (
     <div className="min-h-screen p-4 md:p-8">
@@ -194,7 +193,7 @@ export default function SettingsPage() {
               </label>
               <input
                 type="text"
-                value={teacher.username}
+                value={lehrer.username}
                 disabled
                 className="w-full px-4 py-3 rounded-lg bg-white/10 border-2 border-white/20 outline-none opacity-50"
               />
@@ -337,7 +336,7 @@ export default function SettingsPage() {
           <div className="space-y-2 text-sm">
             <div>
               <p className="opacity-70">Aktuelle Bin-ID:</p>
-              <p className="font-mono bg-black/30 p-2 rounded">{teacher.id}</p>
+              <p className="font-mono bg-black/30 p-2 rounded">{lehrer.id}</p>
             </div>
             <div>
               <p className="opacity-70">Gespeicherte Usernames in LocalStorage:</p>
@@ -374,7 +373,7 @@ export default function SettingsPage() {
             whileTap={{ scale: 0.98 }}
             onClick={() => {
               if (confirm('Wirklich ausloggen?')) {
-                logout();
+                logoutLehrer();
                 router.push('/');
               }
             }}

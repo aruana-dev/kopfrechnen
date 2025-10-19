@@ -92,7 +92,7 @@ export default function TeacherDashboard() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={logout}
+              onClick={logoutLehrer}
               className="px-6 py-3 bg-kahoot-red rounded-lg font-bold"
             >
               Logout

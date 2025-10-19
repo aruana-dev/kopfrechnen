@@ -124,7 +124,7 @@ export default function StudentLearnPage() {
           🎓 Selbst lernen
         </h1>
         <p className="text-xl text-center opacity-80 mb-8">
-          Hallo {nickname}! Wähle deine Übung:
+          Hallo {schueler?.nickname || schueler?.vorname}! Wähle deine Übung:
         </p>
 
         <div className="space-y-6">

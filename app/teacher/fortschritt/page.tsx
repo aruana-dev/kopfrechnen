@@ -56,7 +56,7 @@ export default function FortschrittPage() {
   };
 
   const getSchuelerName = (code: string): string => {
-    const schueler = activeKlasse?.schueler.find(s => s.code === code);
+    const schueler = activeKlasse?.schueler.find((s: any) => s.code === code);
     return schueler ? schueler.vorname : code;
   };
 
