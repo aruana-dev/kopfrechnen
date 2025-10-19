@@ -116,7 +116,7 @@ export default function StudentErgebnissePage() {
               📊 Meine Ergebnisse
             </h1>
             <p className="text-xl opacity-80">
-              Hallo {schueler.nickname || schueler.vorname}! Hier siehst du alle deine Übungen
+              Hallo {schueler?.nickname || schueler?.vorname}! Hier siehst du alle deine Übungen
             </p>
           </div>
         </div>
