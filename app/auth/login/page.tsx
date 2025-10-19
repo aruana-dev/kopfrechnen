@@ -19,11 +19,17 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
+    console.log('🔐 Login-Versuch:', { username, mode });
+
     try {
       const success = await loginLehrer(username, password, mode);
+      console.log('🔐 Login-Ergebnis:', success);
+      
       if (success) {
+        console.log('✅ Login erfolgreich, navigiere zu Dashboard');
         router.push('/teacher/dashboard');
       } else {
+        console.log('❌ Login fehlgeschlagen');
         if (mode === 'login') {
           setError('Ungültiger Benutzername oder Passwort');
         } else {
@@ -31,6 +37,7 @@ export default function LoginPage() {
         }
       }
     } catch (err: any) {
+      console.error('❌ Login-Fehler:', err);
       setError(err.message || 'Ein Fehler ist aufgetreten');
     } finally {
       setLoading(false);

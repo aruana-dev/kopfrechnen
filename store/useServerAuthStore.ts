@@ -146,15 +146,20 @@ export const useServerAuthStore = create<ServerAuthStore>()(
         set({ isLoading: true, error: null });
         
         try {
+          console.log('📤 Sende Lehrer-Login-Request:', { username, mode });
+          
           const response = await fetch('/api/auth/lehrer', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password, mode })
           });
 
+          console.log('📥 Lehrer Response Status:', response.status);
           const data = await response.json();
+          console.log('📥 Lehrer Response Data:', data);
 
           if (data.success) {
+            console.log('✅ Lehrer-Login erfolgreich, setze Lehrer-Daten:', data.teacher);
             set({ 
               lehrer: data.teacher,
               isLoading: false,
@@ -162,6 +167,7 @@ export const useServerAuthStore = create<ServerAuthStore>()(
             });
             return true;
           } else {
+            console.log('❌ Lehrer-Login fehlgeschlagen:', data.error);
             set({ 
               error: data.error,
               isLoading: false
@@ -169,6 +175,7 @@ export const useServerAuthStore = create<ServerAuthStore>()(
             return false;
           }
         } catch (error) {
+          console.error('❌ Lehrer-Netzwerk-Fehler:', error);
           set({ 
             error: 'Netzwerk-Fehler',
             isLoading: false

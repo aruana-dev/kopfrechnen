@@ -381,13 +381,13 @@ export default function StudentQuiz() {
           </p>
         </div>
 
-        {/* Nummernpad - RESPONSIVE */}
-        <div className="grid grid-cols-3 gap-2 mb-2 flex-shrink-0">
+        {/* Nummernpad - RESPONSIVE & KOMPAKT */}
+        <div className="grid grid-cols-3 gap-2 mb-2 flex-shrink-0 max-w-sm mx-auto">
           {['7', '8', '9', '4', '5', '6', '1', '2', '3', '-', '0', '.'].map((num) => (
             <button
               key={num}
               onClick={() => handleNumberClick(num)}
-              className="aspect-square rounded-xl bg-gradient-to-br from-kahoot-blue to-kahoot-purple text-white font-bold text-2xl sm:text-3xl md:text-4xl shadow-xl active:scale-95 transition-transform touch-manipulation"
+              className="aspect-square rounded-xl bg-gradient-to-br from-kahoot-blue to-kahoot-purple text-white font-bold text-xl sm:text-2xl shadow-xl active:scale-95 transition-transform touch-manipulation"
             >
               {num}
             </button>

@@ -55,9 +55,14 @@ export default function Results() {
       });
       
       socket.once('session-created', ({ sessionId, code, session: newSession }) => {
-        console.log('Revanche-Session erstellt:', sessionId, code);
+        console.log('Revanche-Session erstellt:', sessionId, code, newSession);
+        // Session SOFORT setzen, bevor zur Lobby navigiert wird
         useSessionStore.getState().setSession(newSession);
-        router.push(`/teacher/lobby?code=${code}`);
+        useSessionStore.getState().setRole('teacher');
+        // Kurz warten, damit State aktualisiert wird
+        setTimeout(() => {
+          router.push(`/teacher/lobby?code=${code}`);
+        }, 100);
       });
     }
   };
@@ -67,7 +72,7 @@ export default function Results() {
     if (!socket || role !== 'student' || !stats) return;
 
     const handleRevanche = ({ code, session: newSession }: any) => {
-      console.log('Schüler: Revanche gestartet, neuer Code:', code);
+      console.log('Schüler: Revanche gestartet, neuer Code:', code, newSession);
       
       // Finde meinen Namen aus der letzten Session
       const meinName = stats.teilnehmer[0]?.name || 'Spieler';
@@ -84,9 +89,14 @@ export default function Results() {
       socket.emit('join-session', { code, name: meinName });
       
       socket.once('teilnehmer-joined', ({ session: joinedSession }: any) => {
-        console.log('Schüler: Erfolgreich Revanche-Session beigetreten');
+        console.log('Schüler: Erfolgreich Revanche-Session beigetreten', joinedSession);
+        // Session SOFORT setzen, bevor zur Lobby navigiert wird
         useSessionStore.getState().setSession(joinedSession);
-        router.push('/student/lobby');
+        useSessionStore.getState().setRole('student');
+        // Kurz warten, damit State aktualisiert wird
+        setTimeout(() => {
+          router.push('/student/lobby');
+        }, 100);
       });
     };
 
