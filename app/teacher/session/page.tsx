@@ -24,6 +24,14 @@ export default function TeacherSession() {
     };
   }, [socket, router, setStats]);
 
+  const handleAbort = () => {
+    if (!socket || !session) return;
+    
+    if (confirm('Quiz wirklich abbrechen? Die Rangliste wird mit den aktuellen Ergebnissen erstellt.')) {
+      socket.emit('abort-session', session.id);
+    }
+  };
+
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -80,10 +88,20 @@ export default function TeacherSession() {
           <motion.div
             animate={{ scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-6xl"
+            className="text-6xl mb-8"
           >
             ⏳
           </motion.div>
+
+          {/* Abbrechen-Button */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleAbort}
+            className="kahoot-button bg-kahoot-red"
+          >
+            ⏹️ Quiz abbrechen
+          </motion.button>
         </motion.div>
       </div>
     </div>

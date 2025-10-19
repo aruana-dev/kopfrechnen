@@ -266,6 +266,34 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('abort-session', (sessionId) => {
+    const session = sessions.get(sessionId);
+    if (!session) {
+      console.log(`❌ Session nicht gefunden für Abbruch: ${sessionId}`);
+      return;
+    }
+    
+    console.log(`⏹️ Session wird abgebrochen: ${sessionId}`);
+    session.status = 'finished';
+    
+    // Erstelle Rangliste mit aktuellen Ergebnissen
+    const rangliste = session.teilnehmer
+      .map(t => ({
+        id: t.id,
+        name: t.name,
+        punkte: t.antworten.filter(a => a.korrekt).length,
+        gesamtZeit: t.gesamtZeit,
+        durchschnittsZeit: t.durchschnittsZeit,
+      }))
+      .sort((a, b) => {
+        if (b.punkte !== a.punkte) return b.punkte - a.punkte;
+        return a.gesamtZeit - b.gesamtZeit;
+      });
+    
+    console.log('🎉 Session abgebrochen, sende Rangliste:', rangliste);
+    io.to(sessionId).emit('session-finished', { rangliste });
+  });
+
   socket.on('disconnect', () => {
     console.log('Client getrennt:', socket.id);
     
