@@ -158,7 +158,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Aktionen */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -179,6 +179,17 @@ export default function StudentDashboard() {
             <div className="text-4xl mb-2">🎮</div>
             <h3 className="text-xl font-bold">Session beitreten</h3>
             <p className="opacity-70">Mit Session-Code beitreten</p>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => router.push('/student/ergebnisse')}
+            className="kahoot-card p-6 text-left hover:bg-white/20 transition-all"
+          >
+            <div className="text-4xl mb-2">📊</div>
+            <h3 className="text-xl font-bold">Meine Ergebnisse</h3>
+            <p className="opacity-70">Alle Übungen im Detail ansehen</p>
           </motion.button>
         </div>
 

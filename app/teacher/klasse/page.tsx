@@ -406,20 +406,27 @@ export default function KlassePage() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: i * 0.03 }}
-                  className="bg-gradient-to-br from-kahoot-blue to-kahoot-purple p-4 rounded-xl"
+                  className="bg-gradient-to-br from-kahoot-blue to-kahoot-purple p-4 rounded-xl cursor-pointer hover:scale-105 transition-transform"
+                  onClick={() => router.push(`/teacher/schueler/${s.id}`)}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="text-sm opacity-70">#{i + 1}</div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleEditSchueler(s)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditSchueler(s);
+                        }}
                         className="text-xl hover:scale-110 transition-transform"
                         title="Bearbeiten"
                       >
                         ✏️
                       </button>
                       <button
-                        onClick={() => handleDeleteSchueler(s.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSchueler(s.id);
+                        }}
                         disabled={loading}
                         className="text-xl hover:scale-110 transition-transform disabled:opacity-50 relative"
                         title={loading ? "Lösche..." : "Löschen"}
