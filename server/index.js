@@ -205,17 +205,26 @@ io.on('connection', (socket) => {
 
   socket.on('submit-antwort', ({ sessionId, aufgabeId, antwort, zeit }) => {
     const session = sessions.get(sessionId);
-    if (!session) return;
+    if (!session) {
+      console.log(`❌ Session nicht gefunden: ${sessionId}`);
+      return;
+    }
     
     const teilnehmer = session.teilnehmer.find(t => t.id === socket.id);
-    if (!teilnehmer) return;
+    if (!teilnehmer) {
+      console.log(`❌ Teilnehmer nicht gefunden: ${socket.id}`);
+      return;
+    }
     
     const aufgabe = session.aufgaben.find(a => a.id === aufgabeId);
-    if (!aufgabe) return;
+    if (!aufgabe) {
+      console.log(`❌ Aufgabe nicht gefunden: ${aufgabeId}`);
+      return;
+    }
     
     const korrekt = Math.abs(antwort - aufgabe.ergebnis) < 0.01;
     
-    console.log(`Antwort: ${antwort}, Ergebnis: ${aufgabe.ergebnis}, Korrekt: ${korrekt}`);
+    console.log(`✅ Antwort von ${teilnehmer.name}: ${antwort}, Ergebnis: ${aufgabe.ergebnis}, Korrekt: ${korrekt}`);
     
     teilnehmer.antworten.push({
       aufgabeId,
@@ -227,9 +236,14 @@ io.on('connection', (socket) => {
     teilnehmer.gesamtZeit += zeit;
     teilnehmer.durchschnittsZeit = teilnehmer.gesamtZeit / teilnehmer.antworten.length;
     
+    // Fortschritt loggen
+    console.log(`📊 Fortschritt ${teilnehmer.name}: ${teilnehmer.antworten.length}/${session.aufgaben.length}`);
+    
     const alleFertig = session.teilnehmer.every(
       t => t.antworten.length === session.aufgaben.length
     );
+    
+    console.log(`🔍 Alle fertig? ${alleFertig} (${session.teilnehmer.map(t => `${t.name}: ${t.antworten.length}/${session.aufgaben.length}`).join(', ')})`);
     
     if (alleFertig) {
       session.status = 'finished';
@@ -247,7 +261,7 @@ io.on('connection', (socket) => {
           return a.gesamtZeit - b.gesamtZeit;
         });
       
-      console.log('Session beendet, sende Rangliste:', rangliste);
+      console.log('🎉 Session beendet, sende Rangliste:', rangliste);
       io.to(sessionId).emit('session-finished', { rangliste });
     }
   });
