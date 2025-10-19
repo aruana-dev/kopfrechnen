@@ -3,14 +3,12 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { jsonbin } from '@/lib/jsonbin';
 
 export default function StudentDashboard() {
   const router = useRouter();
-  const { activeKlasse } = useAuthStore();
-  const [schuelerCode, setSchuelerCode] = useState('');
-  const [nickname, setNickname] = useState('');
+  const { schueler } = useServerAuthStore();
   const [meineSessions, setMeineSessions] = useState<any[]>([]);
   const [stats, setStats] = useState({
     gesamtSessions: 0,
@@ -29,18 +27,16 @@ export default function StudentDashboard() {
   useEffect(() => {
     if (!isHydrated) return;
     
-    const code = localStorage.getItem('schuelerCode');
-    const nick = localStorage.getItem('schuelerNickname');
+    console.log('Dashboard: Schüler-Daten:', schueler);
     
-    if (!code || !nick) {
+    if (!schueler) {
+      console.log('Dashboard: Kein Schüler eingeloggt, redirect zu /student/code');
       router.push('/student/code');
       return;
     }
     
-    setSchuelerCode(code);
-    setNickname(nick);
     loadMeineDaten();
-  }, [router, isHydrated]);
+  }, [router, isHydrated, schueler]);
 
   if (!isHydrated) {
     return (
@@ -51,11 +47,10 @@ export default function StudentDashboard() {
   }
 
   const loadMeineDaten = async () => {
-    const code = localStorage.getItem('schuelerCode');
-    if (!code) return;
+    if (!schueler) return;
 
     try {
-      const result = await jsonbin.findKlasseBySchuelerCode(code);
+      const result = await jsonbin.findKlasseBySchuelerCode(schueler.code);
       if (!result) return;
 
       const { klasse } = result;
@@ -63,7 +58,7 @@ export default function StudentDashboard() {
       // Filtere alle Sessions, in denen dieser Schüler mitgemacht hat
       const sessions = (klasse.sessions || [])
         .map((session: any) => {
-          const meinErgebnis = session.ergebnisse.find((e: any) => e.schuelerCode === code);
+          const meinErgebnis = session.ergebnisse.find((e: any) => e.schuelerCode === schueler.code);
           if (meinErgebnis) {
             return {
               ...session,
@@ -96,12 +91,12 @@ export default function StudentDashboard() {
   };
 
   const handleLogout = () => {
-    const { logoutStudent } = useAuthStore.getState();
-    logoutStudent();
+    const { logoutSchueler } = useServerAuthStore.getState();
+    logoutSchueler();
     router.push('/');
   };
 
-  if (!schuelerCode || !nickname) {
+  if (!schueler) {
     return null;
   }
 
@@ -112,10 +107,10 @@ export default function StudentDashboard() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold">
-              Hallo {nickname}! 👋
+              Hallo {schueler.nickname || schueler.vorname}! 👋
             </h1>
             <p className="text-lg opacity-80 mt-2">
-              Code: {schuelerCode}
+              Code: {schueler.code}
             </p>
           </div>
           <motion.button
