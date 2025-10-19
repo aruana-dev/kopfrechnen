@@ -176,8 +176,8 @@ export default function SchuelerProfilPage() {
 
     Object.entries(operationenFehler).forEach(([op, fehlerAnzahl]) => {
       const richtigAnzahl = operationenRichtig[op] || 0;
-      const gesamt = fehlerAnzahl + richtigAnzahl;
-      const fehlerRate = fehlerAnzahl / gesamt;
+      const gesamt = (fehlerAnzahl as number) + richtigAnzahl;
+      const fehlerRate = (fehlerAnzahl as number) / gesamt;
       
       if (fehlerRate > 0.3) {
         schwaechen.push(`${op.charAt(0).toUpperCase() + op.slice(1)} (${Math.round(fehlerRate * 100)}% Fehlerrate)`);
@@ -191,8 +191,8 @@ export default function SchuelerProfilPage() {
     Object.entries(fehlerAnalyse.reihen).forEach(([reihe, fehlerAnzahl]) => {
       const reiheNum = parseInt(reihe);
       const richtigAnzahl = richtigeAntworten.filter(ant => ant.aufgabe.reihe === reiheNum).length;
-      const gesamt = fehlerAnzahl + richtigAnzahl;
-      const fehlerRate = fehlerAnzahl / gesamt;
+      const gesamt = (fehlerAnzahl as number) + richtigAnzahl;
+      const fehlerRate = (fehlerAnzahl as number) / gesamt;
       
       if (fehlerRate > 0.4) {
         schwaechen.push(`${reiheNum}er-Reihe (${Math.round(fehlerRate * 100)}% Fehlerrate)`);
