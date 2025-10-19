@@ -15,6 +15,19 @@ export default function StudentLearnPage() {
   const { activeKlasse } = useAuthStore();
   const [schuelerCode, setSchuelerCode] = useState('');
   const [nickname, setNickname] = useState('');
+  const [settings, setSettings] = useState<SessionSettings>({
+    reihen: [2, 3, 5],
+    operationen: ['multiplikation'],
+    anzahlAufgaben: 10,
+    anzahlStellen: 2,
+    mitKommastellen: false,
+    mitMinuswerten: false,
+    tempo: {
+      vorgegeben: false,
+    },
+    direktWeiter: false,
+    ranglisteAnzeige: 0,
+  });
 
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -44,20 +57,6 @@ export default function StudentLearnPage() {
       </div>
     );
   }
-
-  const [settings, setSettings] = useState<SessionSettings>({
-    reihen: [2, 3, 5],
-    operationen: ['multiplikation'],
-    anzahlAufgaben: 10,
-    anzahlStellen: 2,
-    mitKommastellen: false,
-    mitMinuswerten: false,
-    tempo: {
-      vorgegeben: false,
-    },
-    direktWeiter: false,
-    ranglisteAnzeige: 0,
-  });
 
   const handleOperationToggle = (operation: Operation) => {
     if (settings.operationen.includes(operation)) {
