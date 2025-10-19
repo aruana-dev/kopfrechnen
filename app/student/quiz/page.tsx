@@ -251,6 +251,22 @@ export default function StudentQuiz() {
       if (result) {
         console.log('✅ Klasse gefunden, speichere jetzt...');
         
+        // Erweitere Antworten um Aufgaben-Details
+        const erweiterteAntworten = teilnehmer.antworten.map((antwort: any) => {
+          const aufgabe = session.aufgaben.find(a => a.id === antwort.aufgabeId);
+          return {
+            ...antwort,
+            richtig: antwort.korrekt, // Füge 'richtig' hinzu für Kompatibilität
+            aufgabe: aufgabe ? {
+              zahl1: aufgabe.zahl1,
+              zahl2: aufgabe.zahl2,
+              operation: aufgabe.operation,
+              reihe: aufgabe.reihe,
+              ergebnis: aufgabe.ergebnis
+            } : null
+          };
+        });
+
         const sessionResult = {
           sessionId: session.id,
           datum: Date.now(),
@@ -261,7 +277,7 @@ export default function StudentQuiz() {
             punkte,
             gesamtZeit: teilnehmer.gesamtZeit,
             durchschnittsZeit: teilnehmer.durchschnittsZeit,
-            antworten: teilnehmer.antworten,
+            antworten: erweiterteAntworten,
           }],
         };
         

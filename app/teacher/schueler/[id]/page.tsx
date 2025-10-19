@@ -103,7 +103,7 @@ export default function SchuelerProfilPage() {
       }
 
       // Berechne Statistiken
-      const richtigeAntworten = alleAntworten.filter(ant => ant.richtig).length;
+      const richtigeAntworten = alleAntworten.filter(ant => ant.richtig || ant.korrekt).length;
       const falscheAntworten = alleAntworten.length - richtigeAntworten;
       const gesamtPunkte = sessions.reduce((sum, session) => {
         const erg = session.ergebnisse.find(e => e.schuelerCode === schuelerCode);
@@ -166,8 +166,8 @@ export default function SchuelerProfilPage() {
     // Vereinfachte Analyse ohne OpenAI für Demo
     // In der echten Implementierung würde hier die OpenAI API aufgerufen werden
     
-    const richtigeAntworten = antworten.filter(ant => ant.richtig);
-    const falscheAntworten = antworten.filter(ant => !ant.richtig);
+    const richtigeAntworten = antworten.filter(ant => ant.richtig || ant.korrekt);
+    const falscheAntworten = antworten.filter(ant => !(ant.richtig || ant.korrekt));
     
     const schwaechen = [];
     const staerken = [];

@@ -148,9 +148,9 @@ export default function StudentSessionDetailPage() {
     );
   }
 
-  const richtig = ergebnis.antworten.filter((a: any) => a.richtig).length;
+  const richtig = ergebnis.antworten.filter((a: any) => a.richtig || a.korrekt).length;
   const gesamt = ergebnis.antworten.length;
-  const richtigkeit = Math.round((richtig / gesamt) * 100);
+  const richtigkeit = gesamt > 0 ? Math.round((richtig / gesamt) * 100) : 0;
 
   return (
     <div className="min-h-screen p-4 md:p-8">
@@ -226,65 +226,78 @@ export default function StudentSessionDetailPage() {
         <div className="kahoot-card">
           <h2 className="text-2xl font-bold mb-6">📝 Deine Aufgaben und Antworten</h2>
           <div className="space-y-4">
-            {ergebnis.antworten.map((antwort: any, index: number) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`p-4 rounded-lg border-2 ${
-                  antwort.richtig 
-                    ? 'bg-green-500/20 border-green-500' 
-                    : 'bg-red-500/20 border-red-500'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-sm opacity-70">Aufgabe #{index + 1}</div>
-                  <div className="flex items-center gap-2">
-                    <div className={`px-2 py-1 rounded text-xs font-bold ${
-                      antwort.richtig 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-red-500 text-white'
-                    }`}>
-                      {antwort.richtig ? '✓ Richtig' : '✗ Falsch'}
-                    </div>
-                    <div className="text-sm opacity-70">
-                      {Math.round(antwort.zeit || 0)}s
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="text-xl font-bold mb-2">
-                  {antwort.aufgabe.zahl1} {getOperationIcon(antwort.aufgabe.operation)} {antwort.aufgabe.zahl2} = ?
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="text-sm opacity-70 mb-1">Deine Antwort:</div>
-                    <div className="text-lg font-mono bg-white/10 px-3 py-2 rounded">
-                      {antwort.antwort}
+            {ergebnis.antworten.map((antwort: any, index: number) => {
+              const istRichtig = antwort.richtig || antwort.korrekt;
+              const aufgabe = antwort.aufgabe;
+              
+              return (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className={`p-4 rounded-lg border-2 ${
+                    istRichtig 
+                      ? 'bg-green-500/20 border-green-500' 
+                      : 'bg-red-500/20 border-red-500'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm opacity-70">Aufgabe #{index + 1}</div>
+                    <div className="flex items-center gap-2">
+                      <div className={`px-2 py-1 rounded text-xs font-bold ${
+                        istRichtig 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-red-500 text-white'
+                      }`}>
+                        {istRichtig ? '✓ Richtig' : '✗ Falsch'}
+                      </div>
+                      <div className="text-sm opacity-70">
+                        {Math.round(antwort.zeit || 0)}s
+                      </div>
                     </div>
                   </div>
                   
-                  {!antwort.richtig && (
-                    <div className="flex-1">
-                      <div className="text-sm opacity-70 mb-1">Richtige Antwort:</div>
-                      <div className="text-lg font-mono bg-green-500/20 px-3 py-2 rounded">
-                        {antwort.aufgabe.ergebnis}
+                  {aufgabe ? (
+                    <>
+                      <div className="text-xl font-bold mb-2">
+                        {aufgabe.zahl1} {getOperationIcon(aufgabe.operation)} {aufgabe.zahl2} = ?
                       </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                          <div className="text-sm opacity-70 mb-1">Deine Antwort:</div>
+                          <div className="text-lg font-mono bg-white/10 px-3 py-2 rounded">
+                            {antwort.antwort}
+                          </div>
+                        </div>
+                        
+                        {!istRichtig && (
+                          <div className="flex-1">
+                            <div className="text-sm opacity-70 mb-1">Richtige Antwort:</div>
+                            <div className="text-lg font-mono bg-green-500/20 px-3 py-2 rounded">
+                              {aufgabe.ergebnis}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {!istRichtig && (
+                        <div className="mt-3 pt-3 border-t border-white/20">
+                          <div className="text-sm opacity-70">
+                            <strong>Tipp:</strong> {getFehlerAnalyse(antwort)}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-lg opacity-70">
+                      Aufgabe-Details nicht verfügbar
                     </div>
                   )}
-                </div>
-                
-                {!antwort.richtig && (
-                  <div className="mt-3 pt-3 border-t border-white/20">
-                    <div className="text-sm opacity-70">
-                      <strong>Tipp:</strong> {getFehlerAnalyse(antwort)}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </div>
 

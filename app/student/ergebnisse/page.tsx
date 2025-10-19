@@ -197,9 +197,9 @@ export default function StudentErgebnissePage() {
                 const ergebnis = session.ergebnisse.find(erg => erg.schuelerCode === schuelerCode);
                 if (!ergebnis) return null;
                 
-                const richtig = ergebnis.antworten.filter(a => a.richtig).length;
+                const richtig = ergebnis.antworten.filter(a => a.richtig || a.korrekt).length;
                 const gesamt = ergebnis.antworten.length;
-                const richtigkeit = Math.round((richtig / gesamt) * 100);
+                const richtigkeit = gesamt > 0 ? Math.round((richtig / gesamt) * 100) : 0;
                 
                 return (
                   <motion.div
