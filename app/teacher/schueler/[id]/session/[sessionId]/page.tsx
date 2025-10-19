@@ -36,8 +36,15 @@ export default function SessionDetailPage() {
     
     setLoading(true);
     try {
+      // Lade aktuelle Klassendaten
+      const updatedKlasse = await jsonbin.readBin(activeKlasse.id);
+      if (!updatedKlasse) {
+        router.push('/teacher/klasse');
+        return;
+      }
+      
       // Finde den Schüler
-      const schueler = activeKlasse.schueler?.find(s => s.id === params.id);
+      const schueler = updatedKlasse.schueler?.find(s => s.id === params.id);
       if (!schueler) {
         router.push('/teacher/klasse');
         return;
@@ -46,7 +53,7 @@ export default function SessionDetailPage() {
       setSchueler(schueler);
       
       // Finde die Session
-      const session = activeKlasse.sessions?.find(s => s.sessionId === params.sessionId);
+      const session = updatedKlasse.sessions?.find(s => s.sessionId === params.sessionId);
       if (!session) {
         router.push(`/teacher/schueler/${params.id}`);
         return;

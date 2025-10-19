@@ -46,8 +46,15 @@ export default function SchuelerProfilPage() {
     
     setLoading(true);
     try {
+      // Lade aktuelle Klassendaten
+      const updatedKlasse = await jsonbin.readBin(activeKlasse.id);
+      if (!updatedKlasse) {
+        router.push('/teacher/klasse');
+        return;
+      }
+      
       // Finde den Schüler
-      const schueler = activeKlasse.schueler?.find(s => s.id === params.id);
+      const schueler = updatedKlasse.schueler?.find(s => s.id === params.id);
       if (!schueler) {
         router.push('/teacher/klasse');
         return;
@@ -56,7 +63,7 @@ export default function SchuelerProfilPage() {
       setSchueler(schueler);
       
       // Lade alle Sessions für diesen Schüler
-      const alleSessions = activeKlasse.sessions || [];
+      const alleSessions = updatedKlasse.sessions || [];
       const schuelerSessions = alleSessions.filter(session => 
         session.ergebnisse.some(erg => erg.schuelerCode === schueler.code)
       );

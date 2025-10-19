@@ -27,7 +27,7 @@ export default function StudentSessionDetailPage() {
     const code = localStorage.getItem('schuelerCode');
     const nick = localStorage.getItem('schuelerNickname');
     
-    if (!code || !nick || !activeKlasse) {
+    if (!code || !nick) {
       router.push('/student/code');
       return;
     }
@@ -35,18 +35,27 @@ export default function StudentSessionDetailPage() {
     setSchuelerCode(code);
     setNickname(nick);
     loadSessionData();
-  }, [router, isHydrated, activeKlasse, params.sessionId]);
+  }, [router, isHydrated, params.sessionId]);
 
   const loadSessionData = async () => {
-    if (!activeKlasse || !params.sessionId) return;
+    if (!params.sessionId) return;
     
     setLoading(true);
     try {
       const code = localStorage.getItem('schuelerCode');
       if (!code) return;
+
+      // Lade Klasse direkt über jsonbin
+      const result = await jsonbin.findKlasseBySchuelerCode(code);
+      if (!result) {
+        router.push('/student/code');
+        return;
+      }
+
+      const { klasse } = result;
       
       // Finde die Session
-      const session = activeKlasse.sessions?.find(s => s.sessionId === params.sessionId);
+      const session = klasse.sessions?.find(s => s.sessionId === params.sessionId);
       if (!session) {
         router.push('/student/ergebnisse');
         return;

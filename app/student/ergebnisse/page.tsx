@@ -25,7 +25,7 @@ export default function StudentErgebnissePage() {
     const code = localStorage.getItem('schuelerCode');
     const nick = localStorage.getItem('schuelerNickname');
     
-    if (!code || !nick || !activeKlasse) {
+    if (!code || !nick) {
       router.push('/student/code');
       return;
     }
@@ -33,18 +33,25 @@ export default function StudentErgebnissePage() {
     setSchuelerCode(code);
     setNickname(nick);
     loadSessions();
-  }, [router, isHydrated, activeKlasse]);
+  }, [router, isHydrated]);
 
   const loadSessions = async () => {
-    if (!activeKlasse) return;
-    
     setLoading(true);
     try {
       const code = localStorage.getItem('schuelerCode');
       if (!code) return;
+
+      // Lade Klasse direkt über jsonbin
+      const result = await jsonbin.findKlasseBySchuelerCode(code);
+      if (!result) {
+        router.push('/student/code');
+        return;
+      }
+
+      const { klasse } = result;
       
       // Lade alle Sessions für diesen Schüler
-      const alleSessions = activeKlasse.sessions || [];
+      const alleSessions = klasse.sessions || [];
       const schuelerSessions = alleSessions.filter(session => 
         session.ergebnisse.some(erg => erg.schuelerCode === code)
       );
