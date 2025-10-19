@@ -3,31 +3,31 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { jsonbin, Klasse } from '@/lib/jsonbin';
 
 export default function TeacherDashboard() {
   const router = useRouter();
-  const { teacher, logout, setActiveKlasse } = useAuthStore();
+  const { lehrer, logoutLehrer, setActiveKlasse } = useServerAuthStore();
   const [klassen, setKlassen] = useState<Klasse[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewKlasse, setShowNewKlasse] = useState(false);
   const [newKlasseName, setNewKlasseName] = useState('');
 
   useEffect(() => {
-    if (!teacher) {
+    if (!lehrer) {
       router.push('/auth/login');
       return;
     }
     loadKlassen();
-  }, [teacher, router]);
+  }, [lehrer, router]);
 
   const loadKlassen = async () => {
-    if (!teacher) return;
+    if (!lehrer) return;
     setLoading(true);
     try {
       const klassenData: Klasse[] = [];
-      for (const klasseId of teacher.klassen) {
+      for (const klasseId of lehrer.klassen) {
         const klasse = await jsonbin.readBin(klasseId);
         if (klasse) klassenData.push({ ...klasse, id: klasseId });
       }
@@ -40,17 +40,17 @@ export default function TeacherDashboard() {
   };
 
   const handleCreateKlasse = async () => {
-    if (!teacher || !newKlasseName) return;
+    if (!lehrer || !newKlasseName) return;
     
     try {
-      const klasse = await jsonbin.createKlasse(teacher.id, newKlasseName);
+      const klasse = await jsonbin.createKlasse(lehrer.id, newKlasseName);
       
       // Klasse zur Lehrer-Liste hinzufügen
       const updatedTeacher = {
-        ...teacher,
-        klassen: [...teacher.klassen, klasse.id],
+        ...lehrer,
+        klassen: [...lehrer.klassen, klasse.id],
       };
-      await jsonbin.updateBin(teacher.id, updatedTeacher);
+      await jsonbin.updateBin(lehrer.id, updatedTeacher);
       
       setKlassen([...klassen, klasse]);
       setNewKlasseName('');
@@ -65,7 +65,7 @@ export default function TeacherDashboard() {
     router.push('/teacher/klasse');
   };
 
-  if (!teacher) return null;
+  if (!lehrer) return null;
 
   return (
     <div className="min-h-screen p-4 md:p-8">
@@ -77,7 +77,7 @@ export default function TeacherDashboard() {
               Dashboard
             </h1>
             <p className="text-xl opacity-80 mt-2">
-              Willkommen, {teacher.username}!
+              Willkommen, {lehrer.username}!
             </p>
           </div>
           <div className="flex gap-3">

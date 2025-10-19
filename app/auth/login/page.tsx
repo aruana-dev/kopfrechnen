@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { jsonbin } from '@/lib/jsonbin';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setTeacher } = useAuthStore();
+  const { loginLehrer } = useServerAuthStore();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -21,26 +20,15 @@ export default function LoginPage() {
     setError('');
 
     try {
-      if (mode === 'login') {
-        const teacher = await jsonbin.loginTeacher(username, password);
-        if (teacher) {
-          setTeacher(teacher);
-          router.push('/teacher/dashboard');
-        } else {
-          setError('Ungültiger Benutzername oder Passwort');
-        }
-      } else {
-        // Check ob Username schon existiert über jsonbin
-        const usernameExists = await jsonbin.checkUsernameExists(username);
-        if (usernameExists) {
-          setError('Benutzername bereits vergeben!');
-          setLoading(false);
-          return;
-        }
-        
-        const teacher = await jsonbin.registerTeacher(username, password);
-        setTeacher(teacher);
+      const success = await loginLehrer(username, password, mode);
+      if (success) {
         router.push('/teacher/dashboard');
+      } else {
+        if (mode === 'login') {
+          setError('Ungültiger Benutzername oder Passwort');
+        } else {
+          setError('Registrierung fehlgeschlagen. Benutzername möglicherweise bereits vergeben.');
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Ein Fehler ist aufgetreten');
