@@ -473,26 +473,20 @@ class JSONBinClient {
     await this.updateBin(teacherBinId, teacher);
   }
 
-  // Prüfe ob Benutzername bereits existiert (über alle Bins)
+  // Prüfe ob Benutzername bereits existiert (über Index-Bin)
   async checkUsernameExists(username: string): Promise<boolean> {
     try {
-      const bins = await this.listBins();
+      console.log('🔍 JSONBin: Prüfe ob Username existiert:', username);
       
-      for (const bin of bins) {
-        try {
-          const data = await this.readBin(bin.id);
-          if (data && data.username === username) {
-            return true;
-          }
-        } catch (error) {
-          // Ignoriere Fehler beim Lesen einzelner Bins
-          continue;
-        }
-      }
+      const indexBinId = await this.getOrCreateIndexBin();
+      const indexBin = await this.readBin(indexBinId);
       
-      return false;
+      const exists = !!(indexBin.teachers && indexBin.teachers[username]);
+      console.log('🔍 JSONBin: Username existiert:', exists);
+      
+      return exists;
     } catch (error) {
-      console.error('Fehler beim Prüfen des Benutzernamens:', error);
+      console.error('❌ JSONBin: Fehler beim Prüfen des Benutzernamens:', error);
       return false;
     }
   }
@@ -510,7 +504,16 @@ class JSONBinClient {
     teacher.username = newUsername;
     await this.updateBin(teacherBinId, teacher);
 
-    // Update localStorage mapping
+    // Update Index-Bin
+    const indexBinId = await this.getOrCreateIndexBin();
+    const indexBin = await this.readBin(indexBinId);
+    if (indexBin.teachers) {
+      delete indexBin.teachers[oldUsername]; // Alte Zuordnung löschen
+      indexBin.teachers[newUsername] = teacherBinId; // Neue Zuordnung
+      await this.updateBin(indexBinId, indexBin);
+    }
+
+    // Update localStorage mapping (optional, für Kompatibilität)
     if (typeof window !== 'undefined') {
       const teacherMap = JSON.parse(localStorage.getItem('teacherBins') || '{}');
       delete teacherMap[oldUsername]; // Alte Zuordnung löschen
