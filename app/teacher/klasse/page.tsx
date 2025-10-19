@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { jsonbin, Schueler } from '@/lib/jsonbin';
 import { useSessionStore } from '@/store/useSessionStore';
 
 export default function KlassePage() {
   const router = useRouter();
-  const { teacher, activeKlasse, setActiveKlasse } = useAuthStore();
+  const { lehrer, activeKlasse, setActiveKlasse } = useServerAuthStore();
   const { setSession, setRole } = useSessionStore();
   const [schueler, setSchueler] = useState<Schueler[]>([]);
   const [vornamen, setVornamen] = useState<string>('');
@@ -26,12 +26,12 @@ export default function KlassePage() {
   useEffect(() => {
     if (!isHydrated) return;
     
-    if (!teacher || !activeKlasse) {
+    if (!lehrer || !activeKlasse) {
       router.push('/teacher/dashboard');
       return;
     }
     setSchueler(activeKlasse.schueler || []);
-  }, [teacher, activeKlasse, router, isHydrated]);
+  }, [lehrer, activeKlasse, router, isHydrated]);
 
   if (!isHydrated) {
     return (

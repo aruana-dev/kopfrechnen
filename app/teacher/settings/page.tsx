@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { jsonbin } from '@/lib/jsonbin';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { teacher, setTeacher, logout } = useAuthStore();
+  const { lehrer, logoutLehrer } = useServerAuthStore();
   const [tab, setTab] = useState<'username' | 'password'>('username');
   
   // Username Change
@@ -37,17 +37,17 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!isHydrated) return;
     
-    if (!teacher) {
+    if (!lehrer) {
       router.push('/auth/login');
       return;
     }
     
-    // Lade localStorage Daten
+    // Lade localStorage Daten (nur für Debug-Anzeige)
     if (typeof window !== 'undefined') {
       const teacherBins = JSON.parse(localStorage.getItem('teacherBins') || '{}');
       setLocalStorageData(teacherBins);
     }
-  }, [teacher, router, isHydrated]);
+  }, [lehrer, router, isHydrated]);
 
   if (!isHydrated) {
     return (

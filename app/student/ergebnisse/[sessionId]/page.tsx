@@ -159,7 +159,7 @@ export default function StudentSessionDetailPage() {
               📚 Übung vom {new Date(session.datum).toLocaleDateString('de-DE')}
             </h1>
             <p className="text-xl opacity-80">
-              {schueler.nickname || schueler.vorname} • {ergebnis.punkte} Punkte • {richtigkeit}% richtig
+              {schueler?.nickname || schueler?.vorname} • {ergebnis.punkte} Punkte • {richtigkeit}% richtig
             </p>
           </div>
         </div>
