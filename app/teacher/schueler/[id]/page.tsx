@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { jsonbin, Schueler, SessionResult } from '@/lib/jsonbin';
 
 interface SchuelerAnalyse {
@@ -19,7 +19,7 @@ interface SchuelerAnalyse {
 export default function SchuelerProfilPage() {
   const router = useRouter();
   const params = useParams();
-  const { teacher, activeKlasse } = useAuthStore();
+  const { lehrer, activeKlasse } = useServerAuthStore();
   const [schueler, setSchueler] = useState<Schueler | null>(null);
   const [sessions, setSessions] = useState<SessionResult[]>([]);
   const [analyse, setAnalyse] = useState<SchuelerAnalyse | null>(null);
@@ -33,13 +33,13 @@ export default function SchuelerProfilPage() {
   useEffect(() => {
     if (!isHydrated) return;
     
-    if (!teacher || !activeKlasse) {
+    if (!lehrer || !activeKlasse) {
       router.push('/teacher/dashboard');
       return;
     }
 
     loadSchuelerData();
-  }, [teacher, activeKlasse, router, isHydrated, params.id]);
+  }, [lehrer, activeKlasse, router, isHydrated, params.id]);
 
   const loadSchuelerData = async () => {
     if (!activeKlasse || !params.id) return;

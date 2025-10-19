@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { jsonbin } from '@/lib/jsonbin';
 
 export default function FortschrittPage() {
   const router = useRouter();
-  const { teacher, activeKlasse, setActiveKlasse } = useAuthStore();
+  const { lehrer, activeKlasse, setActiveKlasse } = useServerAuthStore();
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -21,13 +21,13 @@ export default function FortschrittPage() {
   useEffect(() => {
     if (!isHydrated) return;
     
-    if (!teacher || !activeKlasse) {
+    if (!lehrer || !activeKlasse) {
       router.push('/teacher/dashboard');
       return;
     }
     
     setSessions(activeKlasse.sessions || []);
-  }, [teacher, activeKlasse, router, isHydrated]);
+  }, [lehrer, activeKlasse, router, isHydrated]);
 
   if (!isHydrated) {
     return (

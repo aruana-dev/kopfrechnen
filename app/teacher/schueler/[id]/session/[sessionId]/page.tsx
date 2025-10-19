@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { jsonbin, Schueler, SessionResult } from '@/lib/jsonbin';
 
 export default function SessionDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const { teacher, activeKlasse } = useAuthStore();
+  const { lehrer, activeKlasse } = useServerAuthStore();
   const [schueler, setSchueler] = useState<Schueler | null>(null);
   const [session, setSession] = useState<SessionResult | null>(null);
   const [ergebnis, setErgebnis] = useState<any>(null);
@@ -23,13 +23,13 @@ export default function SessionDetailPage() {
   useEffect(() => {
     if (!isHydrated) return;
     
-    if (!teacher || !activeKlasse) {
+    if (!lehrer || !activeKlasse) {
       router.push('/teacher/dashboard');
       return;
     }
 
     loadSessionData();
-  }, [teacher, activeKlasse, router, isHydrated, params.id, params.sessionId]);
+  }, [lehrer, activeKlasse, router, isHydrated, params.id, params.sessionId]);
 
   const loadSessionData = async () => {
     if (!activeKlasse || !params.id || !params.sessionId) return;
