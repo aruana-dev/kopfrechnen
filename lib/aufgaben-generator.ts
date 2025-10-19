@@ -17,6 +17,7 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
   let zahl1: number;
   let zahl2: number;
   let ergebnis: number;
+  let reihe: number | undefined;
   
   const maxWert = Math.pow(10, settings.anzahlStellen) - 1;
   const minWert = settings.mitMinuswerten ? -maxWert : 0;
@@ -36,7 +37,7 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
       
     case 'multiplikation':
       // Bei Multiplikation kleinere Zahlen für Reihen
-      const reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
+      reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
       const faktor = Math.floor(Math.random() * 12) + 1;
       zahl1 = reihe;
       zahl2 = faktor;
@@ -45,10 +46,10 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
       
     case 'division':
       // Division: Erst Ergebnis und zweite Zahl, dann erste berechnen
-      const reiheDiv = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
+      reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
       const faktorDiv = Math.floor(Math.random() * 12) + 1;
-      zahl1 = reiheDiv * faktorDiv;
-      zahl2 = reiheDiv;
+      zahl1 = reihe * faktorDiv;
+      zahl2 = reihe;
       ergebnis = faktorDiv;
       break;
   }
@@ -60,6 +61,7 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
     zahl2,
     ergebnis,
     index,
+    reihe,
   };
 }
 

@@ -22,6 +22,7 @@ export interface Aufgabe {
   zahl2: number;
   ergebnis: number;
   index: number;
+  reihe?: number; // Optional für Kompatibilität
 }
 
 export interface Teilnehmer {
