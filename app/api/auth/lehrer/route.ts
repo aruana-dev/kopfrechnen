@@ -5,7 +5,10 @@ export async function POST(request: NextRequest) {
   try {
     const { username, password, mode } = await request.json();
     
+    console.log('🔐 API: Lehrer-Auth-Request:', { username, mode });
+    
     if (!username || !password) {
+      console.log('❌ API: Fehlende Credentials');
       return NextResponse.json(
         { error: 'Benutzername und Passwort sind erforderlich' },
         { status: 400 }
@@ -13,17 +16,21 @@ export async function POST(request: NextRequest) {
     }
 
     if (mode === 'register') {
+      console.log('📝 API: Registrierung gestartet');
       // Prüfe ob Benutzername bereits existiert
       const usernameExists = await jsonbin.checkUsernameExists(username);
       if (usernameExists) {
+        console.log('❌ API: Benutzername bereits vergeben');
         return NextResponse.json(
           { error: 'Benutzername bereits vergeben' },
           { status: 409 }
         );
       }
 
+      console.log('✅ API: Registriere neuen Lehrer');
       // Registriere neuen Lehrer
       const teacher = await jsonbin.registerTeacher(username, password);
+      console.log('✅ API: Lehrer registriert:', teacher.id);
       
       // Erstelle Session-Token
       const sessionToken = `lehrer_${teacher.id}_${Date.now()}`;
@@ -53,14 +60,18 @@ export async function POST(request: NextRequest) {
       return response;
     } else {
       // Login
+      console.log('🔑 API: Login-Versuch für:', username);
       const teacher = await jsonbin.loginTeacher(username, password);
       
       if (!teacher) {
+        console.log('❌ API: Login fehlgeschlagen - Ungültige Credentials');
         return NextResponse.json(
           { error: 'Ungültiger Benutzername oder Passwort' },
           { status: 401 }
         );
       }
+      
+      console.log('✅ API: Login erfolgreich:', teacher.id);
 
       // Erstelle Session-Token
       const sessionToken = `lehrer_${teacher.id}_${Date.now()}`;

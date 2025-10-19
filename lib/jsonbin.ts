@@ -173,6 +173,8 @@ class JSONBinClient {
 
   // Lehrer registrieren
   async registerTeacher(username: string, password: string): Promise<Teacher> {
+    console.log('📝 JSONBin: Registriere Lehrer:', username);
+    
     const passwordHash = await this.hashPassword(password);
     const teacher: Teacher = {
       id: `teacher_${Date.now()}`,
@@ -183,8 +185,19 @@ class JSONBinClient {
     };
 
     const { id } = await this.createBin(teacher, `teacher_${username}`);
+    console.log('✅ JSONBin: Lehrer-Bin erstellt:', id);
     
-    // Speichere Bin-ID im localStorage für Login
+    // Speichere Lehrer in Index-Bin
+    const indexBinId = await this.getOrCreateIndexBin();
+    const indexBin = await this.readBin(indexBinId);
+    if (!indexBin.teachers) {
+      indexBin.teachers = {};
+    }
+    indexBin.teachers[username] = id;
+    await this.updateBin(indexBinId, indexBin);
+    console.log('✅ JSONBin: Lehrer in Index-Bin gespeichert');
+    
+    // Auch im localStorage speichern für Kompatibilität (optional)
     if (typeof window !== 'undefined') {
       const teacherMap = JSON.parse(localStorage.getItem('teacherBins') || '{}');
       teacherMap[username] = id;
@@ -196,42 +209,47 @@ class JSONBinClient {
 
   // Lehrer einloggen
   async loginTeacher(username: string, password: string): Promise<Teacher | null> {
-    console.log('Login-Versuch für:', username);
+    console.log('🔑 JSONBin: Login-Versuch für:', username);
     
     try {
-      // Hole Bin-ID aus localStorage
-      let binId: string | null = null;
+      // Hole Index-Bin
+      const indexBinId = await this.getOrCreateIndexBin();
+      const indexBin = await this.readBin(indexBinId);
+      console.log('📦 JSONBin: Index-Bin geladen, Lehrer:', Object.keys(indexBin.teachers || {}).length);
       
-      if (typeof window !== 'undefined') {
-        const teacherMap = JSON.parse(localStorage.getItem('teacherBins') || '{}');
-        binId = teacherMap[username];
-        console.log('Bin-ID aus localStorage:', binId);
-      }
+      // Finde Lehrer-Bin-ID über Username
+      const binId = indexBin.teachers?.[username];
       
       if (!binId) {
-        console.error('Keine Bin-ID für', username, 'gefunden. Bitte neu registrieren.');
+        console.error('❌ JSONBin: Keine Bin-ID für', username, 'gefunden');
         return null;
       }
+      
+      console.log('✅ JSONBin: Bin-ID gefunden:', binId);
       
       // Lade Teacher-Daten
       const teacher = await this.readBin(binId);
       
       if (!teacher) {
-        console.error('Teacher-Bin nicht gefunden:', binId);
+        console.error('❌ JSONBin: Teacher-Bin nicht gefunden:', binId);
         return null;
       }
       
+      console.log('✅ JSONBin: Teacher-Daten geladen');
+      
       // Prüfe Passwort
       const passwordHash = await this.hashPassword(password);
-      console.log('Password Check:', teacher.passwordHash === passwordHash);
+      const passwordMatch = teacher.passwordHash === passwordHash;
+      console.log('🔐 JSONBin: Passwort-Check:', passwordMatch);
 
-      if (teacher.passwordHash === passwordHash) {
+      if (passwordMatch) {
         return { ...teacher, id: binId };
       }
 
+      console.log('❌ JSONBin: Passwort falsch');
       return null;
     } catch (error) {
-      console.error('Login Error:', error);
+      console.error('❌ JSONBin: Login Error:', error);
       return null;
     }
   }
