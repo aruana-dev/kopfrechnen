@@ -83,14 +83,16 @@ export default function StudentLearnPage() {
   };
 
   const handleStart = () => {
+    if (!schueler) return;
+    
     const session = {
       id: nanoid(),
-      code: schuelerCode,
+      code: schueler.code,
       settings,
       aufgaben: generiereAufgaben(settings),
       teilnehmer: [{
         id: 'self',
-        name: nickname,
+        name: schueler.nickname || schueler.vorname,
         antworten: [],
         gesamtZeit: 0,
         durchschnittsZeit: 0,
