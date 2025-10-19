@@ -26,7 +26,9 @@ export default function LoginPage() {
       console.log('🔐 Login-Ergebnis:', success);
       
       if (success) {
-        console.log('✅ Login erfolgreich, navigiere zu Dashboard');
+        console.log('✅ Login erfolgreich, warte kurz und navigiere zu Dashboard');
+        // Kurz warten, damit der Store aktualisiert wird
+        await new Promise(resolve => setTimeout(resolve, 200));
         router.push('/teacher/dashboard');
       } else {
         console.log('❌ Login fehlgeschlagen');

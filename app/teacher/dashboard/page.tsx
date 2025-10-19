@@ -13,14 +13,25 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const [showNewKlasse, setShowNewKlasse] = useState(false);
   const [newKlasseName, setNewKlasseName] = useState('');
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Warte auf Hydration
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
+    if (!isHydrated) return;
+    
     if (!lehrer) {
+      console.log('⚠️ Kein Lehrer im Store, leite zu Login um');
       router.push('/auth/login');
       return;
     }
+    
+    console.log('✅ Lehrer im Store gefunden:', lehrer.username);
     loadKlassen();
-  }, [lehrer, router]);
+  }, [lehrer, router, isHydrated]);
 
   const loadKlassen = async () => {
     if (!lehrer) return;
@@ -65,7 +76,13 @@ export default function TeacherDashboard() {
     router.push('/teacher/klasse');
   };
 
-  if (!lehrer) return null;
+  if (!isHydrated || !lehrer) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-2xl">Lädt...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-4 md:p-8">
