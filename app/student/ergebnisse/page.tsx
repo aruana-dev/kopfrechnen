@@ -152,7 +152,7 @@ export default function StudentErgebnissePage() {
                 <div className="text-center">
                   <div className="text-3xl font-bold text-kahoot-green">
                     {sessions.reduce((sum, session) => {
-                      const erg = session.ergebnisse.find(e => e.schuelerCode === schuelerCode);
+                      const erg = session.ergebnisse.find(e => e.schuelerCode === schueler?.code);
                       return sum + (erg?.punkte || 0);
                     }, 0)}
                   </div>
@@ -161,7 +161,7 @@ export default function StudentErgebnissePage() {
                 <div className="text-center">
                   <div className="text-3xl font-bold text-kahoot-purple">
                     {Math.round(sessions.reduce((sum, session) => {
-                      const erg = session.ergebnisse.find(e => e.schuelerCode === schuelerCode);
+                      const erg = session.ergebnisse.find(e => e.schuelerCode === schueler?.code);
                       return sum + (erg?.durchschnittsZeit || 0);
                     }, 0) / sessions.length)}
                   </div>
@@ -170,7 +170,7 @@ export default function StudentErgebnissePage() {
                 <div className="text-center">
                   <div className="text-3xl font-bold text-kahoot-pink">
                     {Math.round(sessions.reduce((sum, session) => {
-                      const erg = session.ergebnisse.find(e => e.schuelerCode === schuelerCode);
+                      const erg = session.ergebnisse.find(e => e.schuelerCode === schueler?.code);
                       if (!erg) return sum;
                       const richtig = erg.antworten.filter(a => a.richtig).length;
                       const gesamt = erg.antworten.length;
@@ -186,7 +186,7 @@ export default function StudentErgebnissePage() {
             <div className="space-y-4">
               <h2 className="text-2xl font-bold">📚 Deine Übungen</h2>
               {sessions.map((session, i) => {
-                const ergebnis = session.ergebnisse.find(erg => erg.schuelerCode === schuelerCode);
+                const ergebnis = session.ergebnisse.find(erg => erg.schuelerCode === schueler?.code);
                 if (!ergebnis) return null;
                 
                 const richtig = ergebnis.antworten.filter(a => a.richtig || a.korrekt).length;
