@@ -60,15 +60,20 @@ export const useServerAuthStore = create<ServerAuthStore>()(
         set({ isLoading: true, error: null });
         
         try {
+          console.log('📤 Sende Login-Request:', { schuelerCode, nickname });
+          
           const response = await fetch('/api/auth/schueler', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ schuelerCode, nickname })
           });
 
+          console.log('📥 Response Status:', response.status);
           const data = await response.json();
+          console.log('📥 Response Data:', data);
 
           if (data.success) {
+            console.log('✅ Login erfolgreich, setze Schüler-Daten');
             set({ 
               schueler: data.schueler,
               isLoading: false,
@@ -76,6 +81,7 @@ export const useServerAuthStore = create<ServerAuthStore>()(
             });
             return true;
           } else {
+            console.log('❌ Login fehlgeschlagen:', data.error);
             set({ 
               error: data.error,
               isLoading: false
@@ -83,6 +89,7 @@ export const useServerAuthStore = create<ServerAuthStore>()(
             return false;
           }
         } catch (error) {
+          console.error('❌ Netzwerk-Fehler:', error);
           set({ 
             error: 'Netzwerk-Fehler',
             isLoading: false

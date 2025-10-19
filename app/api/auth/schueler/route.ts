@@ -5,7 +5,10 @@ export async function POST(request: NextRequest) {
   try {
     const { schuelerCode, nickname } = await request.json();
     
+    console.log('🔐 Schüler-Login Versuch:', { schuelerCode, nickname });
+    
     if (!schuelerCode || !nickname) {
+      console.log('❌ Fehlende Daten');
       return NextResponse.json(
         { error: 'Schüler-Code und Nickname sind erforderlich' },
         { status: 400 }
@@ -13,8 +16,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Finde Klasse über jsonbin
+    console.log('🔍 Suche Klasse für Code:', schuelerCode);
     const result = await jsonbin.findKlasseBySchuelerCode(schuelerCode);
+    
     if (!result) {
+      console.log('❌ Klasse nicht gefunden für Code:', schuelerCode);
       return NextResponse.json(
         { error: 'Ungültiger Schüler-Code' },
         { status: 404 }
@@ -22,14 +28,19 @@ export async function POST(request: NextRequest) {
     }
 
     const { klasse, binId } = result;
+    console.log('✅ Klasse gefunden:', { klasseName: klasse.name, binId });
+    
     const schueler = klasse.schueler?.find((s: any) => s.code === schuelerCode);
     
     if (!schueler) {
+      console.log('❌ Schüler nicht in Klasse gefunden');
       return NextResponse.json(
         { error: 'Schüler nicht gefunden' },
         { status: 404 }
       );
     }
+    
+    console.log('✅ Schüler gefunden:', { vorname: schueler.vorname, id: schueler.id });
 
     // Erstelle Session-Token (vereinfacht für Demo)
     const sessionToken = `schueler_${schuelerCode}_${Date.now()}`;
@@ -63,9 +74,10 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 24 Stunden
+      maxAge: 24 * 60 * 60 // 24 Stunden in Sekunden
     });
 
+    console.log('✅ Login erfolgreich, Cookie gesetzt');
     return response;
   } catch (error) {
     console.error('Schüler-Authentifizierung Fehler:', error);
