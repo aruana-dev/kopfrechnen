@@ -9,6 +9,8 @@
     "build": "next build",
     "start": "next start",
     "start:server": "tsx server.ts",
+    "start:railway": "node .next/standalone/server.js",
+    "start:monolith": "./start.sh",
     "lint": "next lint"
   },
   "dependencies": {
