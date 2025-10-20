@@ -293,47 +293,59 @@ class JSONBinClient {
     // 1. Versuche aus Environment Variable (Production)
     if (INDEX_BIN_ID_FROM_ENV) {
       console.log('📦 Verwende Index-Bin-ID aus Environment:', INDEX_BIN_ID_FROM_ENV);
-      return INDEX_BIN_ID_FROM_ENV;
+      
+      // Prüfe ob der Bin existiert, wenn nicht erstelle ihn
+      try {
+        const index = await this.readBin(INDEX_BIN_ID_FROM_ENV);
+        if (index && index.type === 'kopfrechnen_index') {
+          console.log('✅ Index-Bin aus Environment gefunden und gültig');
+          return INDEX_BIN_ID_FROM_ENV;
+        }
+      } catch (error) {
+        console.log('⚠️ Index-Bin aus Environment nicht gefunden, erstelle neu...');
+      }
     }
     
-    // 2. Versuche aus localStorage (Local Dev)
+    // 2. Versuche aus localStorage (Local Dev, Client-Side)
     let indexBinId: string | null = null;
     
     if (typeof window !== 'undefined') {
       indexBinId = localStorage.getItem(INDEX_BIN_ID_KEY);
       console.log('📦 Index-Bin-ID aus localStorage:', indexBinId);
-    }
-
-    // 3. Wenn vorhanden, prüfe ob noch gültig
-    if (indexBinId) {
-      try {
-        const index = await this.readBin(indexBinId);
-        if (index && index.type === 'kopfrechnen_index') {
-          console.log('✅ Index-Bin gefunden und gültig');
-          return indexBinId;
+      
+      // Prüfe ob gültig
+      if (indexBinId) {
+        try {
+          const index = await this.readBin(indexBinId);
+          if (index && index.type === 'kopfrechnen_index') {
+            console.log('✅ Index-Bin aus localStorage gefunden und gültig');
+            return indexBinId;
+          }
+        } catch (error) {
+          console.log('⚠️ Index-Bin aus localStorage nicht mehr gültig');
         }
-      } catch (error) {
-        console.log('⚠️ Index-Bin nicht mehr gültig');
       }
     }
 
-    // 4. Erstelle neuen Index-Bin (nur für lokale Entwicklung)
-    console.log('➕ Erstelle neuen Index-Bin...');
+    // 3. Erstelle neuen Index-Bin automatisch
+    console.log('➕ Erstelle neuen Index-Bin automatisch...');
     const indexData = {
       type: 'kopfrechnen_index',
       schuelerCodes: {},
+      teachers: {},
       created: Date.now(),
-      version: '1.0',
+      version: '2.0',
     };
 
-    const { id } = await this.createBin(indexData, 'kopfrechnen_schueler_index_v1');
+    const { id } = await this.createBin(indexData, 'kopfrechnen_index_v2');
     
+    // Speichere in localStorage wenn Client-Side
     if (typeof window !== 'undefined') {
       localStorage.setItem(INDEX_BIN_ID_KEY, id);
     }
 
     console.log('✅ Neuer Index-Bin erstellt:', id);
-    console.log('⚠️ WICHTIG: Für Production diese ID als NEXT_PUBLIC_INDEX_BIN_ID setzen!');
+    console.log('💡 Tipp: Setze NEXT_PUBLIC_INDEX_BIN_ID=' + id + ' für Production');
 
     return id;
   }
