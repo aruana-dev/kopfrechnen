@@ -7,7 +7,7 @@
     "dev:next": "next dev",
     "dev:server": "tsx watch server.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "node server-combined.js",
     "start:server": "tsx server.ts",
     "start:railway": "node .next/standalone/server.js",
     "start:monolith": "./start.sh",
