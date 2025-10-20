@@ -7,7 +7,6 @@ const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
 const { Server } = require('socket.io');
-const { nanoid } = require('nanoid');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = '0.0.0.0';
@@ -17,7 +16,13 @@ const port = parseInt(process.env.PORT || '3000', 10);
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-app.prepare().then(() => {
+// Async Startup für ESM Module
+(async () => {
+  // Dynamisches Import für nanoid (ESM)
+  const { nanoid } = await import('nanoid');
+  console.log('✅ nanoid geladen');
+
+  await app.prepare();
   const httpServer = createServer(async (req, res) => {
     try {
       const parsedUrl = parse(req.url, true);
@@ -165,5 +170,8 @@ app.prepare().then(() => {
     console.log(`🌐 Environment:     ${process.env.NODE_ENV || 'development'}`);
     console.log('═══════════════════════════════════════════════════════');
   });
+})().catch(err => {
+  console.error('❌ Server Startup Fehler:', err);
+  process.exit(1);
 });
 
