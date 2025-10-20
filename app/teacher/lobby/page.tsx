@@ -85,7 +85,8 @@ function TeacherLobbyContent() {
 
   const handleStart = () => {
     if (!socket || !session) return;
-    socket.emit('start-session', session.id);
+    console.log('🚀 Lehrer startet Session:', session.id);
+    socket.emit('start-session', { sessionId: session.id });
   };
 
   if (!session || !code) {
