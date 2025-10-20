@@ -11,8 +11,26 @@ export function useSocket() {
   useEffect(() => {
     // Verwende die globale Socket-Instanz oder erstelle eine neue
     if (!globalSocket) {
-      // Socket URL: Aus Environment Variable oder localhost
-      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+      // Socket URL: Intelligente Auto-Detection
+      let socketUrl: string;
+      
+      if (typeof window !== 'undefined') {
+        // Production: Verwende aktuelle Domain (Railway, Vercel, etc.)
+        // Development: Verwende localhost:3001
+        const isProduction = window.location.hostname !== 'localhost';
+        
+        if (isProduction) {
+          // Auf Production: Verwende dieselbe Domain (Monolith-Modus)
+          socketUrl = window.location.origin;
+          console.log('🚀 Production-Modus: Verwende aktuelle Domain für Socket.io');
+        } else {
+          // Auf localhost: Verwende separaten Socket.io Server
+          socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+          console.log('🔧 Development-Modus: Verwende lokalen Socket.io Server');
+        }
+      } else {
+        socketUrl = 'http://localhost:3001';
+      }
       
       console.log('🔌 Verbinde zu Socket.io Server:', socketUrl);
       
