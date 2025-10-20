@@ -9,10 +9,16 @@ import { useSessionStore } from '@/store/useSessionStore';
 export default function TeacherSession() {
   const router = useRouter();
   const { socket } = useSocket();
-  const { session, stats, setStats } = useSessionStore();
+  const { session, stats, setStats, setSession } = useSessionStore();
 
   useEffect(() => {
     if (!socket) return;
+
+    // Empfange Fortschritts-Updates
+    socket.on('progress-update', ({ session: updatedSession }) => {
+      console.log('📊 Fortschritts-Update empfangen');
+      setSession(updatedSession);
+    });
 
     socket.on('session-finished', ({ rangliste }) => {
       setStats({ teilnehmer: rangliste });
@@ -20,9 +26,10 @@ export default function TeacherSession() {
     });
 
     return () => {
+      socket.off('progress-update');
       socket.off('session-finished');
     };
-  }, [socket, router, setStats]);
+  }, [socket, router, setStats, setSession]);
 
   const handleAbort = () => {
     if (!socket || !session) return;

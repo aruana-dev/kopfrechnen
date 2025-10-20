@@ -247,6 +247,9 @@ io.on('connection', (socket) => {
     // Fortschritt loggen
     console.log(`📊 Fortschritt ${teilnehmer.name}: ${teilnehmer.antworten.length}/${session.aufgaben.length}`);
     
+    // Sende Fortschritts-Update an alle (inkl. Lehrer)
+    io.to(sessionId).emit('progress-update', { session });
+    
     const alleFertig = session.teilnehmer.every(
       t => t.antworten.length === session.aufgaben.length
     );
