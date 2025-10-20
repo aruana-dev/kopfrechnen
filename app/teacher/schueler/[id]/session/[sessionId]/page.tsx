@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
 import { useServerAuthStore } from '@/store/useServerAuthStore';
-import { jsonbin, Schueler, SessionResult } from '@/lib/jsonbin';
+import { Schueler, SessionResult } from '@/lib/jsonbin';
 
 export default function SessionDetailPage() {
   const router = useRouter();
@@ -36,15 +36,20 @@ export default function SessionDetailPage() {
     
     setLoading(true);
     try {
-      // Lade aktuelle Klassendaten
-      const updatedKlasse = await jsonbin.readBin(activeKlasse.id);
-      if (!updatedKlasse) {
+      // Lade aktuelle Klassendaten via API
+      const response = await fetch(`/api/klasse/${activeKlasse.id}`);
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        console.error('Fehler beim Laden:', data.error);
         router.push('/teacher/klasse');
         return;
       }
+
+      const updatedKlasse = data.klasse;
       
       // Finde den Schüler
-      const schueler = (updatedKlasse as any).schueler?.find((s: any) => s.id === params.id);
+      const schueler = updatedKlasse.schueler?.find((s: any) => s.id === params.id);
       if (!schueler) {
         router.push('/teacher/klasse');
         return;
@@ -53,7 +58,7 @@ export default function SessionDetailPage() {
       setSchueler(schueler);
       
       // Finde die Session
-      const session = (updatedKlasse as any).sessions?.find((s: any) => s.sessionId === params.sessionId);
+      const session = updatedKlasse.sessions?.find((s: any) => s.sessionId === params.sessionId);
       if (!session) {
         router.push(`/teacher/schueler/${params.id}`);
         return;

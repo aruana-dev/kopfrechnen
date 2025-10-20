@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useServerAuthStore } from '@/store/useServerAuthStore';
-import { jsonbin } from '@/lib/jsonbin';
 
 export default function FortschrittPage() {
   const router = useRouter();
@@ -43,10 +42,20 @@ export default function FortschrittPage() {
 
     setLoading(true);
     try {
-      await jsonbin.deleteSchuelerSession(activeKlasse.id, schuelerCode, sessionId);
-      const updatedKlasse = await jsonbin.readBin(activeKlasse.id);
-      setActiveKlasse(updatedKlasse);
-      setSessions(updatedKlasse.sessions || []);
+      const response = await fetch('/api/teacher/session/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ klasseId: activeKlasse.id, schuelerCode, sessionId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setActiveKlasse(data.klasse);
+        setSessions(data.klasse.sessions || []);
+      } else {
+        alert(data.error || 'Fehler beim Löschen der Session!');
+      }
     } catch (error) {
       console.error('Fehler beim Löschen:', error);
       alert('Fehler beim Löschen der Session!');
