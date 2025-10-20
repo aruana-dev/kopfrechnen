@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { jsonbin } from '@/lib/jsonbin';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     console.log('🔍 Debug: Lade Index-Bin für Lehrer-Debug');
