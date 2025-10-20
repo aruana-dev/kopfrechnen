@@ -52,11 +52,12 @@ function TeacherLobbyContent() {
       playSound('countdown.mp3'); // Countdown Sound
     };
 
-    const handleSessionStarted = () => {
-      console.log('Lehrer: Session gestartet');
+    const handleSessionStarted = (data: any) => {
+      console.log('🎉 Lehrer: session-started Event empfangen!', data);
       playSound('start.mp3'); // Start Sound
       // Kurz warten, damit Sound abgespielt werden kann
       setTimeout(() => {
+        console.log('→ Navigiere zu /teacher/session');
         router.push('/teacher/session');
       }, 500);
     };

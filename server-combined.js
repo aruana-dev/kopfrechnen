@@ -110,6 +110,7 @@ const port = parseInt(process.env.PORT || '3000', 10);
     });
 
     socket.on('start-session', ({ sessionId }) => {
+      console.log('📨 start-session Event empfangen:', sessionId, 'von Socket:', socket.id);
       const session = sessions.get(sessionId);
       if (!session) {
         console.log('❌ Session nicht gefunden:', sessionId);
@@ -118,6 +119,7 @@ const port = parseInt(process.env.PORT || '3000', 10);
       
       session.status = 'active';
       socket.join(sessionId);
+      console.log('👥 Socket joined Room:', sessionId, '- Sende session-started an Room');
       io.to(sessionId).emit('session-started', { session });
       
       console.log('🚀 Session gestartet:', sessionId);
