@@ -1,0 +1,26 @@
+# Railway One-Click Deploy Configuration
+version: 1
+
+services:
+  - name: kopfrechnen-app
+    source:
+      repo: aruana-dev/kopfrechnen
+      branch: main
+    build:
+      command: npm install && npm run build
+      output: .next/standalone
+    start:
+      command: node .next/standalone/server.js
+    environment:
+      NODE_ENV: production
+    variables:
+      - name: NEXT_PUBLIC_JSONBIN_API_KEY
+        description: "JSONBin.io API Master Key"
+        required: true
+      - name: NEXT_PUBLIC_INDEX_BIN_ID
+        description: "JSONBin.io Index Bin ID"
+        required: true
+      - name: NEXT_PUBLIC_SOCKET_URL
+        description: "Socket.io Server URL (use Railway public domain)"
+        default: "${{RAILWAY_PUBLIC_DOMAIN}}"
+
