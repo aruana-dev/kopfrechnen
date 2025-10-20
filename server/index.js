@@ -191,7 +191,14 @@ io.on('connection', (socket) => {
 
   socket.on('start-session', (sessionId) => {
     const session = sessions.get(sessionId);
-    if (!session) return;
+    if (!session) {
+      console.log(`❌ Session nicht gefunden: ${sessionId}`);
+      return;
+    }
+    
+    // Stelle sicher, dass der Lehrer im Room ist
+    socket.join(sessionId);
+    console.log(`🚀 Lehrer startet Session: ${sessionId}, Socket ${socket.id} ist jetzt im Room`);
     
     session.status = 'countdown';
     io.to(sessionId).emit('session-countdown');
@@ -199,6 +206,7 @@ io.on('connection', (socket) => {
     setTimeout(() => {
       session.status = 'running';
       session.startzeit = Date.now();
+      console.log(`▶️ Session gestartet: ${sessionId}`);
       io.to(sessionId).emit('session-started', { aufgaben: session.aufgaben });
     }, 10000);
   });

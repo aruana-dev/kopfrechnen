@@ -19,16 +19,26 @@ export function useSocket() {
       globalSocket = io(socketUrl, {
         transports: ['websocket', 'polling'],
         reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionAttempts: 10,
       });
 
       globalSocket.on('connect', () => {
-        console.log('Socket verbunden:', globalSocket?.id);
+        console.log('✅ Socket verbunden:', globalSocket?.id);
         setConnected(true);
       });
 
-      globalSocket.on('disconnect', () => {
-        console.log('Socket getrennt');
+      globalSocket.on('disconnect', (reason) => {
+        console.log('❌ Socket getrennt:', reason);
         setConnected(false);
+      });
+
+      globalSocket.on('reconnect', (attemptNumber) => {
+        console.log('🔄 Socket wieder verbunden nach', attemptNumber, 'Versuchen');
+      });
+
+      globalSocket.on('reconnect_error', (error) => {
+        console.error('❌ Reconnect Fehler:', error);
       });
     }
 
