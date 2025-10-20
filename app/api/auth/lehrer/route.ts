@@ -31,15 +31,6 @@ export async function POST(request: NextRequest) {
       // Registriere neuen Lehrer
       const teacher = await jsonbin.registerTeacher(username, password);
       console.log('✅ API: Lehrer registriert:', teacher.id);
-      
-      // Erstelle Session-Token
-      const sessionToken = `lehrer_${teacher.id}_${Date.now()}`;
-      const sessionData = {
-        teacherId: teacher.id,
-        username: teacher.username,
-        token: sessionToken,
-        expires: Date.now() + (24 * 60 * 60 * 1000) // 24 Stunden
-      };
 
       const response = NextResponse.json({
         success: true,
@@ -50,11 +41,15 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      response.cookies.set('lehrer_session', JSON.stringify(sessionData), {
+      response.cookies.set('teacher_session', JSON.stringify({
+        id: teacher.id,
+        username: teacher.username,
+        klassen: teacher.klassen
+      }), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 24 * 60 * 60 // 24 Stunden in Sekunden
+        maxAge: 7 * 24 * 60 * 60 // 7 Tage in Sekunden
       });
 
       return response;
@@ -75,15 +70,6 @@ export async function POST(request: NextRequest) {
       
       console.log('✅ API: Login erfolgreich:', teacher.id, teacher.username);
 
-      // Erstelle Session-Token
-      const sessionToken = `lehrer_${teacher.id}_${Date.now()}`;
-      const sessionData = {
-        teacherId: teacher.id,
-        username: teacher.username,
-        token: sessionToken,
-        expires: Date.now() + (24 * 60 * 60 * 1000) // 24 Stunden
-      };
-
       const response = NextResponse.json({
         success: true,
         teacher: {
@@ -93,11 +79,15 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      response.cookies.set('lehrer_session', JSON.stringify(sessionData), {
+      response.cookies.set('teacher_session', JSON.stringify({
+        id: teacher.id,
+        username: teacher.username,
+        klassen: teacher.klassen
+      }), {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 24 * 60 * 60 // 24 Stunden in Sekunden
+        maxAge: 7 * 24 * 60 * 60 // 7 Tage in Sekunden
       });
 
       return response;
@@ -113,7 +103,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get('lehrer_session');
+    const sessionCookie = request.cookies.get('teacher_session');
     
     if (!sessionCookie) {
       return NextResponse.json(
@@ -122,19 +112,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const sessionData = JSON.parse(sessionCookie.value);
-    
-    // Prüfe Ablaufzeit
-    if (sessionData.expires < Date.now()) {
-      return NextResponse.json(
-        { error: 'Session abgelaufen' },
-        { status: 401 }
-      );
-    }
+    const teacher = JSON.parse(sessionCookie.value);
 
-    // Lade aktuelle Lehrer-Daten
-    const teacher = await jsonbin.readBin(sessionData.teacherId);
-    if (!teacher) {
+    // Lade aktuelle Lehrer-Daten vom JSONBin
+    const freshTeacher = await jsonbin.readBin(teacher.id);
+    if (!freshTeacher) {
       return NextResponse.json(
         { error: 'Lehrer nicht gefunden' },
         { status: 404 }
@@ -144,9 +126,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       teacher: {
-        id: teacher.id,
-        username: teacher.username,
-        klassen: teacher.klassen || []
+        id: freshTeacher.id || teacher.id,
+        username: freshTeacher.username,
+        klassen: freshTeacher.klassen || []
       }
     });
   } catch (error) {
@@ -160,6 +142,6 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE() {
   const response = NextResponse.json({ success: true });
-  response.cookies.delete('lehrer_session');
+  response.cookies.delete('teacher_session');
   return response;
 }

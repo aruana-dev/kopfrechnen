@@ -7,7 +7,7 @@ import { useServerAuthStore } from '@/store/useServerAuthStore';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginLehrer } = useServerAuthStore();
+  const { loginLehrer, loadLehrerData } = useServerAuthStore();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -26,9 +26,12 @@ export default function LoginPage() {
       console.log('🔐 Login-Ergebnis:', success);
       
       if (success) {
-        console.log('✅ Login erfolgreich, warte kurz und navigiere zu Dashboard');
-        // Kurz warten, damit der Store aktualisiert wird
-        await new Promise(resolve => setTimeout(resolve, 200));
+        console.log('✅ Login erfolgreich, warte auf Cookie und lade Lehrer-Daten');
+        // Warte 500ms damit das Cookie gesetzt ist
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // Lade Lehrer-Daten vom Server (mit Cookie)
+        await loadLehrerData();
+        console.log('✅ Lehrer-Daten geladen, navigiere zu Dashboard');
         router.push('/teacher/dashboard');
       } else {
         console.log('❌ Login fehlgeschlagen');
