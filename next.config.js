@@ -4,8 +4,8 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_JSONBIN_API_KEY: process.env.NEXT_PUBLIC_JSONBIN_API_KEY,
   },
-  // Kein standalone output - wir verwenden einen Custom Server mit Socket.io
-  // output: 'standalone',
+  // Zurück zu standalone - Custom Server funktioniert nicht mit API Routes
+  output: 'standalone',
 }
 
 module.exports = nextConfig
