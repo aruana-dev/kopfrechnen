@@ -394,23 +394,14 @@ export default function StudentQuiz() {
           ))}
         </div>
 
-        {/* Aktions-Buttons - nur wenn nicht Direkt-Weiter */}
+        {/* Aktions-Button - nur wenn nicht Direkt-Weiter */}
         {!session?.settings.direktWeiter && (
-          <div className="grid grid-cols-2 gap-2 flex-shrink-0">
-            <button
-              onClick={() => handleNumberClick('C')}
-              className="py-3 rounded-xl bg-kahoot-red font-bold text-lg sm:text-xl active:scale-95 transition-transform shadow-lg"
-            >
-              Löschen
-            </button>
-
-            <button
-              onClick={() => handleWeiter(false)}
-              className="py-3 rounded-xl bg-kahoot-green font-bold text-lg sm:text-xl active:scale-95 transition-transform shadow-lg"
-            >
-              Weiter →
-            </button>
-          </div>
+          <button
+            onClick={() => handleWeiter(false)}
+            className="py-3 rounded-xl bg-kahoot-green font-bold text-lg sm:text-xl active:scale-95 transition-transform shadow-lg w-full flex-shrink-0"
+          >
+            Weiter →
+          </button>
         )}
         
         {session?.settings.direktWeiter && (
