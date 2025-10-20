@@ -1,10 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { jsonbin } from '@/lib/jsonbin';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Check authentication
+  const cookieStore = await cookies();
+  const teacherCookie = cookieStore.get('teacher_session');
+  
+  if (!teacherCookie) {
+    return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 });
+  }
+  
   try {
     const klasseId = params.id;
     

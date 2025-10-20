@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useServerAuthStore } from '@/store/useServerAuthStore';
-import { jsonbin, Schueler } from '@/lib/jsonbin';
+import { Schueler } from '@/lib/jsonbin';
 import { useSessionStore } from '@/store/useSessionStore';
 
 export default function KlassePage() {
@@ -58,12 +58,21 @@ export default function KlassePage() {
         return;
       }
 
-      await jsonbin.addSchuelerToKlasse(activeKlasse.id, vornamenList);
-      
-      const updatedKlasse = await jsonbin.readBin(activeKlasse.id);
-      setActiveKlasse(updatedKlasse);
-      setSchueler(updatedKlasse.schueler);
-      setVornamen('');
+      const response = await fetch('/api/teacher/schueler/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ klasseId: activeKlasse.id, vornamen: vornamenList }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setActiveKlasse(data.klasse);
+        setSchueler(data.klasse.schueler);
+        setVornamen('');
+      } else {
+        alert(data.error || 'Fehler beim Hinzufügen von Schülern!');
+      }
     } catch (error) {
       console.error('Fehler beim Hinzufügen von Schülern:', error);
       alert('Fehler beim Hinzufügen von Schülern!');
@@ -82,13 +91,22 @@ export default function KlassePage() {
     setLoading(true);
 
     try {
-      await jsonbin.updateSchueler(activeKlasse.id, editingSchueler);
-      
-      const updatedKlasse = await jsonbin.readBin(activeKlasse.id);
-      setActiveKlasse(updatedKlasse);
-      setSchueler(updatedKlasse.schueler);
-      setShowEditModal(false);
-      setEditingSchueler(null);
+      const response = await fetch('/api/teacher/schueler/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ klasseId: activeKlasse.id, schueler: editingSchueler }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setActiveKlasse(data.klasse);
+        setSchueler(data.klasse.schueler);
+        setShowEditModal(false);
+        setEditingSchueler(null);
+      } else {
+        alert(data.error || 'Fehler beim Bearbeiten!');
+      }
     } catch (error) {
       console.error('Fehler beim Bearbeiten:', error);
       alert('Fehler beim Bearbeiten!');
@@ -103,11 +121,20 @@ export default function KlassePage() {
     
     setLoading(true);
     try {
-      await jsonbin.deleteSchueler(activeKlasse.id, schuelerId);
-      
-      const updatedKlasse = await jsonbin.readBin(activeKlasse.id);
-      setActiveKlasse(updatedKlasse);
-      setSchueler(updatedKlasse.schueler);
+      const response = await fetch('/api/teacher/schueler/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ klasseId: activeKlasse.id, schuelerId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setActiveKlasse(data.klasse);
+        setSchueler(data.klasse.schueler);
+      } else {
+        alert(data.error || 'Fehler beim Löschen!');
+      }
     } catch (error) {
       console.error('Fehler beim Löschen:', error);
       alert('Fehler beim Löschen!');
