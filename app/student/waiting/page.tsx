@@ -5,10 +5,12 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSocket } from '@/hooks/useSocket';
 import { useSessionStore } from '@/store/useSessionStore';
+import SeriesCatcher from '@/app/components/SeriesCatcher';
 
 export default function StudentWaiting() {
   const router = useRouter();
   const { socket } = useSocket();
+  const { session } = useSessionStore();
 
   useEffect(() => {
     if (!socket) return;
@@ -27,33 +29,29 @@ export default function StudentWaiting() {
     };
   }, [socket, router]);
 
+  // Finde eine Reihe aus den Session-Settings für das Spiel
+  const gameSeries = session?.settings.reihen?.[0] || 2;
+
   return (
     <div className="min-h-screen p-4 flex items-center justify-center">
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="kahoot-card text-center max-w-2xl"
-      >
+      <div className="max-w-2xl w-full">
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="text-8xl mb-6"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
         >
-          ⏳
+          <div className="text-center mb-4">
+            <h1 className="text-3xl font-bold mb-2">
+              Fertig! 🎉
+            </h1>
+            <p className="text-xl opacity-80">
+              Warte auf die anderen Teilnehmer...
+            </p>
+          </div>
+
+          {/* Mini-Game während des Wartens */}
+          <SeriesCatcher series={gameSeries} />
         </motion.div>
-
-        <h1 className="text-3xl md:text-5xl font-bold mb-4">
-          Fertig! 🎉
-        </h1>
-
-        <motion.p
-          className="text-xl opacity-80"
-          animate={{ opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          Warte auf die anderen Teilnehmer...
-        </motion.p>
-      </motion.div>
+      </div>
     </div>
   );
 }

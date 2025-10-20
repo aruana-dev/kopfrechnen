@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSocket } from '@/hooks/useSocket';
 import { useSessionStore } from '@/store/useSessionStore';
+import SeriesCatcher from '@/app/components/SeriesCatcher';
 
 export default function StudentLobby() {
   const router = useRouter();
@@ -56,6 +57,9 @@ export default function StudentLobby() {
     );
   }
 
+  // Finde eine Reihe aus den Session-Settings für das Spiel
+  const gameSeries = session.settings.reihen?.[0] || 2;
+
   return (
     <div className="min-h-screen p-4 flex items-center justify-center">
       <div className="max-w-2xl w-full">
@@ -84,31 +88,15 @@ export default function StudentLobby() {
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="kahoot-card text-center"
         >
-          <motion.div
-            animate={{ rotate: [0, 10, -10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-6xl mb-6"
-          >
-            ⏳
-          </motion.div>
+          <div className="text-center mb-4">
+            <p className="text-xl opacity-80">
+              {session.teilnehmer.length} Teilnehmer warten • Die Lehrkraft startet gleich
+            </p>
+          </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">
-            Warte auf Start...
-          </h1>
-
-          <p className="text-xl opacity-80 mb-8">
-            {session.teilnehmer.length} Teilnehmer in der Lobby
-          </p>
-
-          <motion.div
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-lg"
-          >
-            Die Lehrkraft wird das Quiz bald starten
-          </motion.div>
+          {/* Mini-Game statt langweiliger Wartezeit */}
+          <SeriesCatcher series={gameSeries} />
         </motion.div>
       </div>
     </div>
