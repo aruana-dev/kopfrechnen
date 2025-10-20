@@ -49,20 +49,29 @@ export default function Results() {
     
     // Lehrer erstellt neue Session mit gleichen Einstellungen
     if (role === 'teacher') {
-      socket.emit('create-revanche-session', { 
-        oldSessionId: session.id,
-        settings: session.settings 
-      });
+      console.log('🔄 Lehrer: Starte Revanche mit Settings:', session.settings);
       
-      socket.once('session-created', ({ sessionId, code, session: newSession }) => {
-        console.log('Revanche-Session erstellt:', sessionId, code, newSession);
+      // Entferne alte Event-Handler
+      socket.off('session-created');
+      
+      // Registriere Event-Handler
+      socket.on('session-created', ({ sessionId, code, session: newSession }) => {
+        console.log('✅ Revanche-Session erstellt:', sessionId, code, newSession);
         // Session SOFORT setzen, bevor zur Lobby navigiert wird
         useSessionStore.getState().setSession(newSession);
         useSessionStore.getState().setRole('teacher');
+        // Cleanup
+        socket.off('session-created');
         // Kurz warten, damit State aktualisiert wird
         setTimeout(() => {
           router.push(`/teacher/lobby?code=${code}`);
         }, 100);
+      });
+      
+      // Sende Event
+      socket.emit('create-revanche-session', { 
+        oldSessionId: session.id,
+        settings: session.settings 
       });
     }
   };
@@ -71,13 +80,13 @@ export default function Results() {
   useEffect(() => {
     if (!socket || role !== 'student' || !stats) return;
 
-    const handleRevanche = ({ code, session: newSession }: any) => {
-      console.log('Schüler: Revanche gestartet, neuer Code:', code, newSession);
+    const handleRevancheStudent = ({ code, session: newSession }: any) => {
+      console.log('🔄 Schüler: Revanche gestartet, neuer Code:', code, newSession);
       
       // Finde meinen Namen aus der letzten Session
       const meinName = stats.teilnehmer[0]?.name || 'Spieler';
       
-      console.log('Schüler: Trete automatisch bei als:', meinName);
+      console.log('🔄 Schüler: Trete automatisch bei als:', meinName);
       
       // Speichere vorherige Stats
       if (stats) {
@@ -85,27 +94,41 @@ export default function Results() {
       }
       resetForRevanche();
       
-      // Automatisch der neuen Session beitreten!
-      socket.emit('join-session', { code, name: meinName });
+      // Entferne alte Event-Handler
+      socket.off('error');
+      socket.off('teilnehmer-joined');
       
-      socket.once('teilnehmer-joined', ({ session: joinedSession }: any) => {
-        console.log('Schüler: Erfolgreich Revanche-Session beigetreten', joinedSession);
+      // Registriere Event-Handler
+      socket.on('error', ({ message }: any) => {
+        console.error('❌ Schüler: Fehler beim Revanche-Beitritt:', message);
+        socket.off('error');
+        socket.off('teilnehmer-joined');
+      });
+      
+      socket.on('teilnehmer-joined', ({ session: joinedSession }: any) => {
+        console.log('✅ Schüler: Erfolgreich Revanche-Session beigetreten', joinedSession);
         // Session SOFORT setzen, bevor zur Lobby navigiert wird
         useSessionStore.getState().setSession(joinedSession);
         useSessionStore.getState().setRole('student');
+        // Cleanup
+        socket.off('error');
+        socket.off('teilnehmer-joined');
         // Kurz warten, damit State aktualisiert wird
         setTimeout(() => {
           router.push('/student/lobby');
         }, 100);
       });
+      
+      // Automatisch der neuen Session beitreten!
+      socket.emit('join-session', { code, name: meinName });
     };
 
-    socket.on('revanche-started', handleRevanche);
+    socket.on('revanche-started', handleRevancheStudent);
 
     return () => {
-      socket.off('revanche-started', handleRevanche);
+      socket.off('revanche-started', handleRevancheStudent);
     };
-  }, [socket, role, router, stats]);
+  }, [socket, role, router, stats, setPreviousStats, resetForRevanche]);
 
   if (!stats) {
     return (
