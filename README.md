@@ -226,14 +226,40 @@ Bei gleicher Anzahl richtiger Antworten gewinnt die kürzere Gesamtzeit!
 
 ## 🚀 Deployment
 
-### Vercel (Frontend + Konto-Modus)
+Die App kann auf **zwei Wegen** deployed werden:
 
-Die App kann auf Vercel deployed werden:
+### Option 1: Railway (EMPFOHLEN) 🚂
 
+Railway ist die **einfachste und zuverlässigste** Lösung für diese Full-Stack App:
+
+**Vorteile:**
+- ✅ Next.js + Socket.io in einem Service
+- ✅ Keine 503 Fehler
+- ✅ Native WebSocket Unterstützung
+- ✅ Besseres Monitoring & Logging
+- ✅ 10 Minuten Setup
+
+**Quick Start:**
 ```bash
-# Mit GitHub verbinden und pushen
-vercel --prod
+# 1. Railway Account erstellen: railway.app
+# 2. GitHub Repo verbinden
+# 3. Environment Variables setzen (siehe ENV_VARIABLES_RAILWAY.md)
+# 4. Deploy! 🚀
 ```
+
+**📚 Dokumentation:**
+- `RAILWAY_QUICKSTART.md` - Schnellstart in 10 Minuten
+- `RAILWAY_SETUP.md` - Detaillierte Anleitung
+- `RAILWAY_vs_VERCEL.md` - Vergleich der Optionen
+- `ENV_VARIABLES_RAILWAY.md` - Environment Variables Guide
+
+**Kosten:** Ab $5 Credit/Monat (kostenlos für kleine Apps)
+
+---
+
+### Option 2: Vercel + Separater Socket.io Server ☁️
+
+Vercel ist gut für statische Seiten, aber komplizierter für WebSockets:
 
 **Funktioniert auf Vercel:**
 - ✅ Lehrer-Accounts & Klassen
@@ -242,16 +268,26 @@ vercel --prod
 
 **Funktioniert NICHT auf Vercel:**
 - ❌ Live-Multiplayer (braucht Socket.io)
+- ⚠️ Gelegentliche 503 Fehler bei API Routes
 
-### Railway.app (Socket.io Server)
+**Setup:**
+1. Frontend auf Vercel deployen
+2. Socket.io Server **separat** auf Railway/Render hosten
+3. `NEXT_PUBLIC_SOCKET_URL` in Vercel setzen
 
-Für Live-Multiplayer-Sessions:
+**Kosten:** Vercel kostenlos + Socket.io Hosting ($5-10/Monat)
 
-1. Socket.io Server auf Railway.app deployen (siehe `RAILWAY_DEPLOYMENT.md`)
-2. URL in Vercel als `NEXT_PUBLIC_SOCKET_URL` setzen
-3. Fertig! Live-Sessions funktionieren jetzt auch in Production
+---
 
-**Details:** Siehe `DEPLOYMENT.md` und `RAILWAY_DEPLOYMENT.md`
+### 🎯 Empfehlung
+
+Für diese App ist **Railway (Option 1)** die beste Wahl:
+- Alles in einem (Full-Stack)
+- Zuverlässiger
+- Einfacher zu warten
+- Bessere Developer Experience
+
+**Migrations-Guide:** Siehe `RAILWAY_vs_VERCEL.md`
 
 ## Lizenz
 
