@@ -61,17 +61,19 @@ export async function POST(request: NextRequest) {
     } else {
       // Login
       console.log('🔑 API: Login-Versuch für:', username);
+      console.log('🔑 API: Passwort-Länge:', password.length);
+      
       const teacher = await jsonbin.loginTeacher(username, password);
       
       if (!teacher) {
-        console.log('❌ API: Login fehlgeschlagen - Ungültige Credentials');
+        console.log('❌ API: Login fehlgeschlagen - Ungültige Credentials für:', username);
         return NextResponse.json(
           { error: 'Ungültiger Benutzername oder Passwort' },
           { status: 401 }
         );
       }
       
-      console.log('✅ API: Login erfolgreich:', teacher.id);
+      console.log('✅ API: Login erfolgreich:', teacher.id, teacher.username);
 
       // Erstelle Session-Token
       const sessionToken = `lehrer_${teacher.id}_${Date.now()}`;
