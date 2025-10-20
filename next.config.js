@@ -4,8 +4,8 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_JSONBIN_API_KEY: process.env.NEXT_PUBLIC_JSONBIN_API_KEY,
   },
-  // Für Railway Deployment mit Standalone Output
-  output: 'standalone',
+  // Kein standalone output - wir verwenden einen Custom Server mit Socket.io
+  // output: 'standalone',
 }
 
 module.exports = nextConfig

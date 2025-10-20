@@ -1,34 +1,36 @@
 /**
  * Combined Server für Railway Production
- * Startet Next.js App und Socket.io Server zusammen in einem Prozess
+ * Startet Next.js + Socket.io zusammen auf einem Port
  */
 
 const { createServer } = require('http');
-const { parse } = require('url');
 const next = require('next');
 const { Server } = require('socket.io');
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = '0.0.0.0';
+const hostname = process.env.HOSTNAME || '0.0.0.0';
 const port = parseInt(process.env.PORT || '3000', 10);
 
-// Next.js App initialisieren
-const app = next({ dev, hostname, port });
-const handle = app.getRequestHandler();
-
-// Async Startup für ESM Module
+// Async Startup
 (async () => {
   // Dynamisches Import für nanoid (ESM)
   const { nanoid } = await import('nanoid');
   console.log('✅ nanoid geladen');
 
+  // Next.js App initialisieren
+  const app = next({ dev, hostname, port, dir: __dirname });
+  const handle = app.getRequestHandler();
+
+  console.log('⏳ Next.js wird vorbereitet...');
   await app.prepare();
+  console.log('✅ Next.js bereit!');
+
+  // HTTP Server erstellen
   const httpServer = createServer(async (req, res) => {
     try {
-      const parsedUrl = parse(req.url, true);
-      await handle(req, res, parsedUrl);
+      await handle(req, res);
     } catch (err) {
-      console.error('Error handling request:', err);
+      console.error('❌ Error handling request:', err);
       res.statusCode = 500;
       res.end('Internal Server Error');
     }
@@ -40,7 +42,8 @@ const handle = app.getRequestHandler();
       origin: '*',
       methods: ['GET', 'POST']
     },
-    transports: ['websocket', 'polling']
+    transports: ['websocket', 'polling'],
+    path: '/socket.io'
   });
 
   console.log('🔌 Socket.io Server initialisiert');
@@ -108,7 +111,10 @@ const handle = app.getRequestHandler();
 
     socket.on('start-session', ({ sessionId }) => {
       const session = sessions.get(sessionId);
-      if (!session) return;
+      if (!session) {
+        console.log('❌ Session nicht gefunden:', sessionId);
+        return;
+      }
       
       session.status = 'active';
       socket.join(sessionId);
@@ -160,18 +166,17 @@ const handle = app.getRequestHandler();
   });
 
   // Server starten
-  httpServer.listen(port, (err) => {
-    if (err) throw err;
+  httpServer.listen(port, hostname, () => {
     console.log('═══════════════════════════════════════════════════════');
     console.log('🚂 Railway Combined Server gestartet!');
     console.log('═══════════════════════════════════════════════════════');
     console.log(`📦 Next.js App:     http://${hostname}:${port}`);
     console.log(`🔌 Socket.io:       http://${hostname}:${port}/socket.io`);
-    console.log(`🌐 Environment:     ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🌐 Environment:     ${dev ? 'development' : 'production'}`);
     console.log('═══════════════════════════════════════════════════════');
   });
 })().catch(err => {
   console.error('❌ Server Startup Fehler:', err);
+  console.error(err.stack);
   process.exit(1);
 });
-
