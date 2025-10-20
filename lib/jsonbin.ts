@@ -13,6 +13,9 @@ const INDEX_BIN_ID_KEY = 'kopfrechnen_index_bin_id';
 // In-Memory Cache für die Index-Bin-ID (läuft auf Railway im selben Prozess)
 let cachedIndexBinId: string | null = null;
 
+// Lock-Mechanismus um Race Conditions zu vermeiden
+let indexBinInitPromise: Promise<string> | null = null;
+
 // Debug: API Key Status
 if (typeof window !== 'undefined') {
   console.log('API Key Status:', JSONBIN_API_KEY ? '✅ Vorhanden' : '❌ Fehlt');
@@ -292,7 +295,31 @@ class JSONBinClient {
       return cachedIndexBinId;
     }
     
-    // 2. Prüfe localStorage (Client-Side für Development)
+    // 2. Warte auf laufende Initialisierung (verhindert Race Conditions)
+    if (indexBinInitPromise) {
+      console.log('⏳ Warte auf laufende Index-Bin-Initialisierung...');
+      return await indexBinInitPromise;
+    }
+    
+    // 3. Starte neue Initialisierung mit Lock
+    indexBinInitPromise = this.initializeIndexBin();
+    
+    try {
+      const binId = await indexBinInitPromise;
+      return binId;
+    } finally {
+      // Lock freigeben nach 5 Sekunden (Fallback)
+      setTimeout(() => {
+        indexBinInitPromise = null;
+      }, 5000);
+    }
+  }
+
+  // Separate Methode für die eigentliche Initialisierung
+  private async initializeIndexBin(): Promise<string> {
+    console.log('🔄 Initialisiere Index-Bin...');
+    
+    // 1. Prüfe localStorage (Client-Side für Development)
     if (typeof window !== 'undefined') {
       const localId = localStorage.getItem(INDEX_BIN_ID_KEY);
       if (localId) {
@@ -301,6 +328,7 @@ class JSONBinClient {
           const index = await this.readBin(localId);
           if (index && index.type === 'kopfrechnen_index') {
             cachedIndexBinId = localId;
+            indexBinInitPromise = null;
             return localId;
           }
         } catch (error) {
@@ -309,7 +337,7 @@ class JSONBinClient {
       }
     }
     
-    // 3. Suche nach existierenden Index-Bins
+    // 2. Suche nach existierenden Index-Bins
     console.log('🔍 Suche nach existierenden Index-Bins...');
     try {
       const bins = await this.listBins();
@@ -333,6 +361,7 @@ class JSONBinClient {
               
               // Cache die ID
               cachedIndexBinId = bin.id;
+              indexBinInitPromise = null;
               
               // Speichere auch in localStorage für Client
               if (typeof window !== 'undefined') {
@@ -351,7 +380,7 @@ class JSONBinClient {
       console.error('❌ Fehler beim Suchen:', error);
     }
 
-    // 4. Erstelle neuen Index-Bin (nur wenn wirklich keiner existiert)
+    // 3. Erstelle neuen Index-Bin (nur wenn wirklich keiner existiert)
     console.log('➕ Erstelle neuen Index-Bin...');
     const indexData = {
       type: 'kopfrechnen_index',
@@ -365,6 +394,7 @@ class JSONBinClient {
     
     // Cache die neue ID
     cachedIndexBinId = id;
+    indexBinInitPromise = null;
     
     // Speichere auch in localStorage für Client
     if (typeof window !== 'undefined') {
