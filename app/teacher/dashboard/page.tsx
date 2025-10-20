@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useServerAuthStore } from '@/store/useServerAuthStore';
-import { jsonbin, Klasse } from '@/lib/jsonbin';
+import { Klasse } from '@/lib/jsonbin';
 
 export default function TeacherDashboard() {
   const router = useRouter();
@@ -37,12 +37,14 @@ export default function TeacherDashboard() {
     if (!lehrer) return;
     setLoading(true);
     try {
-      const klassenData: Klasse[] = [];
-      for (const klasseId of lehrer.klassen) {
-        const klasse = await jsonbin.readBin(klasseId);
-        if (klasse) klassenData.push({ ...klasse, id: klasseId });
+      const response = await fetch('/api/teacher/klassen');
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setKlassen(data.klassen);
+      } else {
+        console.error('Fehler beim Laden der Klassen:', data.error);
       }
-      setKlassen(klassenData);
     } catch (error) {
       console.error('Fehler beim Laden der Klassen:', error);
     } finally {
@@ -54,20 +56,27 @@ export default function TeacherDashboard() {
     if (!lehrer || !newKlasseName) return;
     
     try {
-      const klasse = await jsonbin.createKlasse(lehrer.id, newKlasseName);
-      
-      // Klasse zur Lehrer-Liste hinzufügen
-      const updatedTeacher = {
-        ...lehrer,
-        klassen: [...lehrer.klassen, klasse.id],
-      };
-      await jsonbin.updateBin(lehrer.id, updatedTeacher);
-      
-      setKlassen([...klassen, klasse]);
-      setNewKlasseName('');
-      setShowNewKlasse(false);
+      const response = await fetch('/api/teacher/klasse/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newKlasseName }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setKlassen([...klassen, data.klasse]);
+        setNewKlasseName('');
+        setShowNewKlasse(false);
+        // Reload to get updated teacher data
+        await loadKlassen();
+      } else {
+        console.error('Fehler beim Erstellen der Klasse:', data.error);
+        alert(data.error || 'Fehler beim Erstellen der Klasse');
+      }
     } catch (error) {
       console.error('Fehler beim Erstellen der Klasse:', error);
+      alert('Netzwerkfehler beim Erstellen der Klasse');
     }
   };
 
