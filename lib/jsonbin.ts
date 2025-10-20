@@ -6,14 +6,12 @@ const rawKey = process.env.NEXT_PUBLIC_JSONBIN_API_KEY || '';
 const JSONBIN_API_KEY = rawKey.trim();
 const JSONBIN_BASE_URL = 'https://api.jsonbin.io/v3';
 
-// Zentrale Index-Bin-ID für Code-Mappings (wird beim ersten Schüler erstellt)
-// Format: { schuelerCodes: { "ABCD12": "klasseBinId", ... } }
+// Zentrale Index-Bin-ID für Code-Mappings
+// Wird automatisch beim ersten Aufruf erstellt und wiederverwendet
 const INDEX_BIN_ID_KEY = 'kopfrechnen_index_bin_id';
 
-// Verwende Environment Variable wenn verfügbar (für Production!)
-const INDEX_BIN_ID_FROM_ENV = typeof process !== 'undefined' 
-  ? process.env.NEXT_PUBLIC_INDEX_BIN_ID 
-  : null;
+// In-Memory Cache für die Index-Bin-ID (läuft auf Railway im selben Prozess)
+let cachedIndexBinId: string | null = null;
 
 // Debug: API Key Status
 if (typeof window !== 'undefined') {
@@ -288,93 +286,73 @@ class JSONBinClient {
 
   // Hole oder erstelle Index-Bin
   private async getOrCreateIndexBin(): Promise<string> {
-    // WICHTIG: Wir brauchen einen FESTEN Index-Bin für die ganze App!
+    // 1. Prüfe In-Memory Cache (Server-Side auf Railway)
+    if (cachedIndexBinId) {
+      console.log('⚡ Verwende gecachte Index-Bin-ID:', cachedIndexBinId);
+      return cachedIndexBinId;
+    }
     
-    // 1. Versuche aus Environment Variable (Production) - HÖCHSTE PRIORITÄT
-    if (INDEX_BIN_ID_FROM_ENV && INDEX_BIN_ID_FROM_ENV.length > 0) {
-      console.log('📦 Verwende Index-Bin-ID aus Environment:', INDEX_BIN_ID_FROM_ENV);
-      
-      // Prüfe ob der Bin existiert, wenn nicht erstelle ihn mit dieser ID
-      try {
-        const index = await this.readBin(INDEX_BIN_ID_FROM_ENV);
-        if (index) {
-          // Stelle sicher, dass es ein Index-Bin ist (initialisiere falls nötig)
-          if (!index.type) index.type = 'kopfrechnen_index';
-          if (!index.teachers) index.teachers = {};
-          if (!index.schuelerCodes) index.schuelerCodes = {};
-          
-          // Update falls nötig
-          if (!index.type || !index.teachers || !index.schuelerCodes) {
-            await this.updateBin(INDEX_BIN_ID_FROM_ENV, index);
+    // 2. Prüfe localStorage (Client-Side für Development)
+    if (typeof window !== 'undefined') {
+      const localId = localStorage.getItem(INDEX_BIN_ID_KEY);
+      if (localId) {
+        console.log('📦 Index-Bin-ID aus localStorage:', localId);
+        try {
+          const index = await this.readBin(localId);
+          if (index && index.type === 'kopfrechnen_index') {
+            cachedIndexBinId = localId;
+            return localId;
           }
-          
-          console.log('✅ Index-Bin aus Environment gefunden und initialisiert');
-          return INDEX_BIN_ID_FROM_ENV;
+        } catch (error) {
+          console.log('⚠️ LocalStorage Index-Bin ungültig, suche neu...');
         }
-      } catch (error) {
-        console.log('⚠️ Index-Bin aus Environment nicht gefunden');
       }
     }
     
-    // 2. Suche nach existierenden Index-Bins (um Duplikate zu vermeiden)
+    // 3. Suche nach existierenden Index-Bins
+    console.log('🔍 Suche nach existierenden Index-Bins...');
     try {
-      console.log('🔍 Suche nach existierenden Index-Bins...');
       const bins = await this.listBins();
       
-      // Finde Index-Bins
       for (const bin of bins) {
         if (bin.name && bin.name.includes('kopfrechnen_index')) {
-          console.log('✅ Existierenden Index-Bin gefunden:', bin.id);
+          console.log('✅ Index-Bin gefunden:', bin.id);
           
-          // Validiere den Bin
           try {
             const index = await this.readBin(bin.id);
             if (index) {
               // Initialisiere fehlende Felder
-              if (!index.type) index.type = 'kopfrechnen_index';
-              if (!index.teachers) index.teachers = {};
-              if (!index.schuelerCodes) index.schuelerCodes = {};
+              let needsUpdate = false;
+              if (!index.type) { index.type = 'kopfrechnen_index'; needsUpdate = true; }
+              if (!index.teachers) { index.teachers = {}; needsUpdate = true; }
+              if (!index.schuelerCodes) { index.schuelerCodes = {}; needsUpdate = true; }
               
-              await this.updateBin(bin.id, index);
+              if (needsUpdate) {
+                await this.updateBin(bin.id, index);
+              }
               
-              // Speichere in localStorage für Client
+              // Cache die ID
+              cachedIndexBinId = bin.id;
+              
+              // Speichere auch in localStorage für Client
               if (typeof window !== 'undefined') {
                 localStorage.setItem(INDEX_BIN_ID_KEY, bin.id);
               }
               
-              console.log('💡 Verwende existierenden Index-Bin:', bin.id);
-              console.log('💡 Setze NEXT_PUBLIC_INDEX_BIN_ID=' + bin.id + ' in Railway');
+              console.log('✅ Verwende existierenden Index-Bin');
               return bin.id;
             }
           } catch (error) {
-            console.log('⚠️ Index-Bin', bin.id, 'ist ungültig');
+            console.log('⚠️ Index-Bin ungültig:', bin.id);
           }
         }
       }
     } catch (error) {
-      console.log('⚠️ Fehler beim Suchen nach Index-Bins:', error);
-    }
-    
-    // 3. Versuche aus localStorage (Local Dev, Client-Side)
-    if (typeof window !== 'undefined') {
-      const indexBinId = localStorage.getItem(INDEX_BIN_ID_KEY);
-      if (indexBinId) {
-        console.log('📦 Index-Bin-ID aus localStorage:', indexBinId);
-        
-        try {
-          const index = await this.readBin(indexBinId);
-          if (index) {
-            console.log('✅ Index-Bin aus localStorage gefunden');
-            return indexBinId;
-          }
-        } catch (error) {
-          console.log('⚠️ Index-Bin aus localStorage nicht mehr gültig');
-        }
-      }
+      console.error('❌ Fehler beim Suchen:', error);
     }
 
-    // 4. Erstelle neuen Index-Bin NUR wenn wirklich keiner existiert
-    console.log('➕ Erstelle neuen Index-Bin (keiner gefunden)...');
+    // 4. Erstelle neuen Index-Bin (nur wenn wirklich keiner existiert)
+    console.log('➕ Erstelle neuen Index-Bin...');
     const indexData = {
       type: 'kopfrechnen_index',
       schuelerCodes: {},
@@ -385,14 +363,16 @@ class JSONBinClient {
 
     const { id } = await this.createBin(indexData, 'kopfrechnen_index_v2');
     
-    // Speichere in localStorage wenn Client-Side
+    // Cache die neue ID
+    cachedIndexBinId = id;
+    
+    // Speichere auch in localStorage für Client
     if (typeof window !== 'undefined') {
       localStorage.setItem(INDEX_BIN_ID_KEY, id);
     }
 
     console.log('✅ Neuer Index-Bin erstellt:', id);
-    console.log('🚨 WICHTIG: Setze in Railway Environment Variables:');
-    console.log('   NEXT_PUBLIC_INDEX_BIN_ID=' + id);
+    console.log('💾 ID wird automatisch im Server-Cache gespeichert');
 
     return id;
   }
@@ -583,4 +563,5 @@ class JSONBinClient {
 }
 
 export const jsonbin = new JSONBinClient();
+
 
