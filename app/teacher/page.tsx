@@ -76,14 +76,22 @@ export default function TeacherPage() {
     }
 
     console.log('Lehrer: Erstelle Session, Socket ID:', socket.id);
-    socket.emit('create-session', settings);
     
-    socket.once('session-created', ({ sessionId, code, session }) => {
+    // Entferne alte Event-Handler um Duplikate zu vermeiden
+    socket.off('session-created');
+    
+    // Registriere neuen Event-Handler
+    socket.on('session-created', ({ sessionId, code, session }) => {
       console.log('Lehrer: Session erstellt!', sessionId, code);
       setSession(session);
       setRole('teacher');
+      // Entferne Handler nach Ausführung
+      socket.off('session-created');
       router.push(`/teacher/lobby?code=${code}`);
     });
+    
+    // Sende create-session Event
+    socket.emit('create-session', settings);
   };
 
   return (

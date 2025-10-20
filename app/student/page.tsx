@@ -25,19 +25,32 @@ export default function StudentPage() {
     }
 
     console.log('Schüler: Versuche beizutreten mit Code:', code, 'Name:', name, 'Socket ID:', socket.id);
-    socket.emit('join-session', { code, name });
-
-    socket.once('error', ({ message }) => {
+    
+    // Entferne alte Event-Handler um Duplikate zu vermeiden
+    socket.off('error');
+    socket.off('teilnehmer-joined');
+    
+    // Registriere Event-Handler
+    socket.on('error', ({ message }) => {
       console.error('Schüler: Fehler beim Beitreten:', message);
       setError(message);
+      // Cleanup nach Fehler
+      socket.off('error');
+      socket.off('teilnehmer-joined');
     });
 
-    socket.once('teilnehmer-joined', ({ teilnehmer, session }) => {
+    socket.on('teilnehmer-joined', ({ teilnehmer, session }) => {
       console.log('Schüler: Erfolgreich beigetreten!', teilnehmer, session);
       setSession(session);
       setRole('student');
+      // Cleanup nach Erfolg
+      socket.off('error');
+      socket.off('teilnehmer-joined');
       router.push('/student/lobby');
     });
+    
+    // Sende join-session Event
+    socket.emit('join-session', { code, name });
   };
 
   return (
