@@ -59,6 +59,11 @@ export default function StudentDashboard() {
       // Filtere alle Sessions, in denen dieser Schüler mitgemacht hat
       const sessions = (klasse.sessions || [])
         .map((session: any) => {
+          // Prüfe ob ergebnisse existiert und ein Array ist
+          if (!session.ergebnisse || !Array.isArray(session.ergebnisse)) {
+            return null;
+          }
+          
           const meinErgebnis = session.ergebnisse.find((e: any) => e.schuelerCode === schueler.code);
           if (meinErgebnis) {
             return {

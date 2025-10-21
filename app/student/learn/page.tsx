@@ -114,10 +114,10 @@ export default function StudentLearnPage() {
     <div className="min-h-screen p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <button
-          onClick={() => router.push('/student/code')}
+          onClick={() => router.push('/student/dashboard')}
           className="text-sm opacity-70 hover:opacity-100 mb-4"
         >
-          ← Zurück
+          ← Zurück zum Dashboard
         </button>
 
         <h1 className="text-4xl md:text-6xl font-bold text-center mb-4">

@@ -60,6 +60,16 @@ export default function StudentPage() {
         animate={{ scale: 1, opacity: 1 }}
         className="w-full max-w-md"
       >
+        {/* Zurück zum Dashboard Link */}
+        <div className="mb-4 text-center">
+          <button
+            onClick={() => router.push('/student/dashboard')}
+            className="text-white/80 hover:text-white transition-colors text-sm"
+          >
+            ← Zurück zum Dashboard
+          </button>
+        </div>
+        
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-8">
           🎓 Quiz beitreten
         </h1>

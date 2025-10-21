@@ -273,8 +273,41 @@ io.on('connection', (socket) => {
         });
       
       console.log('🎉 Session beendet, sende Rangliste:', rangliste);
-      io.to(sessionId).emit('session-finished', { rangliste });
+      io.to(sessionId).emit('session-finished', { rangliste, sessionId: session.id, aufgaben: session.aufgaben, settings: session.settings });
     }
+  });
+
+  socket.on('save-multiplayer-session', async ({ sessionId, schuelerCode, nickname }) => {
+    console.log('💾 Speichere Multiplayer-Ergebnis für Schüler:', nickname, 'Code:', schuelerCode);
+    
+    const session = sessions.get(sessionId);
+    if (!session) {
+      console.log('❌ Session nicht gefunden:', sessionId);
+      socket.emit('save-error', { message: 'Session nicht gefunden' });
+      return;
+    }
+
+    // Finde Teilnehmer-Daten
+    const teilnehmer = session.teilnehmer.find(t => t.name === nickname);
+    if (!teilnehmer) {
+      console.log('❌ Teilnehmer nicht gefunden:', nickname);
+      socket.emit('save-error', { message: 'Teilnehmer nicht gefunden' });
+      return;
+    }
+
+    // Sende die Session-Daten zurück an den Client, damit der Client sie speichert
+    socket.emit('save-data-ready', {
+      sessionId,
+      schuelerCode,
+      nickname,
+      punkte: teilnehmer.antworten.filter(a => a.korrekt).length,
+      gesamtZeit: teilnehmer.gesamtZeit,
+      durchschnittsZeit: teilnehmer.durchschnittsZeit,
+      antworten: teilnehmer.antworten,
+      aufgaben: session.aufgaben,
+    });
+    
+    console.log('✅ Save-Daten an Client gesendet');
   });
 
   socket.on('abort-session', (sessionId) => {
