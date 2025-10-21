@@ -148,6 +148,29 @@ io.on('connection', (socket) => {
     io.to(oldSessionId).emit('revanche-started', { code, session });
   });
 
+  socket.on('get-session-by-code', ({ code }) => {
+    console.log(`Get-Session-Versuch: Code=${code}, Socket=${socket.id}`);
+    const sessionId = codeToSessionId.get(code);
+    
+    if (!sessionId) {
+      console.log(`Session nicht gefunden für Code: ${code}`);
+      socket.emit('error', { message: 'Session nicht gefunden' });
+      return;
+    }
+    
+    const session = sessions.get(sessionId);
+    if (!session) {
+      console.log(`Session nicht gefunden für ID: ${sessionId}`);
+      socket.emit('error', { message: 'Session nicht gefunden' });
+      return;
+    }
+    
+    // Stelle sicher, dass der Socket im Room ist
+    socket.join(sessionId);
+    console.log(`Session geladen: ${sessionId}, Socket ${socket.id} joined Room`);
+    socket.emit('session-loaded', { session });
+  });
+
   socket.on('join-session', ({ code, name }) => {
     console.log(`Join-Versuch: Code=${code}, Name=${name}, Socket=${socket.id}`);
     const sessionId = codeToSessionId.get(code);

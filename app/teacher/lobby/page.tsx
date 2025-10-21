@@ -26,6 +26,26 @@ function TeacherLobbyContent() {
     };
   }, []);
 
+  // Lade Session per Code, falls nicht im Store
+  useEffect(() => {
+    if (!socket || !code) return;
+    
+    if (!session) {
+      console.log('Lehrer Lobby: Session nicht im Store, lade per Code:', code);
+      socket.emit('get-session-by-code', { code });
+      
+      socket.once('session-loaded', ({ session: loadedSession }) => {
+        console.log('Lehrer Lobby: Session geladen:', loadedSession);
+        setSession(loadedSession);
+      });
+      
+      socket.once('error', ({ message }) => {
+        console.error('Fehler beim Laden der Session:', message);
+        router.push('/teacher');
+      });
+    }
+  }, [socket, code, session, setSession, router]);
+
   useEffect(() => {
     if (!socket) {
       console.log('Lehrer Lobby: Socket noch nicht verfügbar');
