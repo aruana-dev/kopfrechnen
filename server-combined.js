@@ -165,8 +165,9 @@ let nanoid = null;
   };
 
   // Jetzt starte den originalen Next.js Standalone Server
+  // In Production ist server.js direkt im Root (wir haben .next/standalone als Root kopiert)
   console.log('⏳ Lade Next.js Standalone Server...');
-  require('./.next/standalone/server.js');
+  require('./server.js');
   
 })().catch(err => {
   console.error('❌ Fehler beim Setup:', err);
