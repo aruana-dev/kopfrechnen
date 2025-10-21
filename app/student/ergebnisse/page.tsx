@@ -45,9 +45,13 @@ export default function StudentErgebnissePage() {
       
       // Lade alle Sessions für diesen Schüler
       const alleSessions = klasse.sessions || [];
-      const schuelerSessions = alleSessions.filter((session: any) => 
-        session.ergebnisse.some((erg: any) => erg.schuelerCode === schueler.code)
-      );
+      const schuelerSessions = alleSessions.filter((session: any) => {
+        // Prüfe ob ergebnisse existiert und ein Array ist
+        if (!session.ergebnisse || !Array.isArray(session.ergebnisse)) {
+          return false;
+        }
+        return session.ergebnisse.some((erg: any) => erg.schuelerCode === schueler.code);
+      });
       
       // Sortiere nach Datum (neueste zuerst)
       schuelerSessions.sort((a: any, b: any) => b.datum - a.datum);

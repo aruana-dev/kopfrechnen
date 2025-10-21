@@ -1,35 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-primary-50 via-secondary-50 to-primary-100;
+    @apply min-h-screen;
+    @apply text-gray-900;
+    @apply font-sans;
+  }
+
+  /* Teacher pages: Primary gradient */
+  body:has([data-role="teacher"]) {
+    @apply bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700;
+    @apply text-white;
+  }
+
+  /* Student pages: Secondary gradient */
+  body:has([data-role="student"]) {
+    @apply bg-gradient-to-br from-secondary-500 via-secondary-600 to-secondary-700;
+    @apply text-white;
+  }
 }
 
-body {
-  @apply bg-gradient-to-br from-kahoot-purple via-kahoot-blue to-kahoot-purple;
-  @apply min-h-screen;
-  @apply text-white;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+@layer components {
+  /* Primary Button */
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white;
+    @apply font-semibold py-3 px-6 rounded-lg;
+    @apply transition-all duration-200;
+    @apply shadow-md hover:shadow-xl;
+    @apply focus:ring-2 focus:ring-primary-200;
+  }
+
+  /* Secondary Button */
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-gray-900;
+    @apply border-2 border-gray-200 hover:border-gray-300;
+    @apply font-semibold py-3 px-6 rounded-lg;
+    @apply transition-all duration-200;
+    @apply shadow-md hover:shadow-xl;
+    @apply focus:ring-2 focus:ring-gray-200;
+  }
+
+  /* Danger Button */
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white;
+    @apply font-semibold py-3 px-6 rounded-lg;
+    @apply transition-colors duration-200;
+    @apply shadow-md hover:shadow-xl;
+    @apply focus:ring-2 focus:ring-red-200;
+  }
+
+  /* Success Button */
+  .btn-success {
+    @apply bg-green-600 hover:bg-green-700 text-white;
+    @apply font-semibold py-3 px-6 rounded-lg;
+    @apply transition-colors duration-200;
+    @apply shadow-md hover:shadow-xl;
+    @apply focus:ring-2 focus:ring-green-200;
+  }
+
+  /* Card Component */
+  .card {
+    @apply bg-white rounded-xl shadow-md p-6;
+    @apply border border-gray-100;
+    @apply transition-all duration-200;
+  }
+
+  .card:hover {
+    @apply shadow-xl;
+  }
+
+  /* Glassmorphism Card (für overlay/modal content) */
+  .card-glass {
+    @apply bg-white/10 backdrop-blur-lg rounded-2xl p-6;
+    @apply border border-white/20;
+    @apply shadow-2xl;
+  }
+
+  /* Input Field */
+  .input-field {
+    @apply w-full px-4 py-3;
+    @apply border-2 border-gray-200 rounded-lg;
+    @apply focus:border-primary-500 focus:ring-2 focus:ring-primary-200;
+    @apply transition-all duration-200;
+    @apply text-gray-900;
+  }
+
+  /* Number Button (Quiz) */
+  .number-button {
+    @apply w-full rounded-xl font-bold text-3xl;
+    @apply bg-gradient-to-br from-primary-500 to-primary-600;
+    @apply text-white shadow-lg;
+    @apply transition-all duration-200;
+    @apply hover:scale-105 active:scale-95;
+    @apply focus:ring-2 focus:ring-primary-200;
+  }
+
+  /* Operation Button (selected) */
+  .operation-button-selected {
+    @apply bg-primary-500 text-white border-2 border-primary-600;
+    @apply p-3 rounded-lg transition-all font-semibold;
+    @apply shadow-md;
+  }
+
+  /* Operation Button (not selected) */
+  .operation-button {
+    @apply border-2 border-gray-200 bg-white text-gray-700;
+    @apply hover:border-gray-300 hover:bg-gray-50;
+    @apply p-3 rounded-lg transition-all font-semibold;
+  }
+
+  /* Loading Spinner */
+  .spinner {
+    @apply animate-spin rounded-full h-4 w-4;
+    @apply border-b-2 border-white;
+  }
+
+  /* Session Code Display */
+  .session-code {
+    @apply text-6xl font-bold tracking-wider;
+    @apply text-primary-600;
+  }
 }
 
-.kahoot-button {
-  @apply px-8 py-4 rounded-lg font-bold text-xl transition-all duration-300;
-  @apply hover:scale-105 active:scale-95;
-  @apply shadow-2xl;
-}
+@layer utilities {
+  /* Touch-friendly targets (min 44x44px) */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
 
-.kahoot-card {
-  @apply bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl;
-  @apply border border-white/20;
-}
-
-.number-button {
-  @apply w-full aspect-square rounded-2xl font-bold text-3xl;
-  @apply transition-all duration-200;
-  @apply hover:scale-105 active:scale-95;
-  @apply shadow-xl;
+  /* Accessibility: Skip to main content */
+  .skip-to-main {
+    @apply absolute -top-96 focus:top-4 left-4 z-50;
+    @apply bg-primary-600 text-white px-4 py-2 rounded-lg;
+    @apply focus:ring-2 focus:ring-primary-200;
+  }
 }
 
