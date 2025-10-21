@@ -50,7 +50,7 @@ export default function StudentErgebnissePage() {
       );
       
       // Sortiere nach Datum (neueste zuerst)
-      schuelerSessions.sort((a, b) => b.datum - a.datum);
+      schuelerSessions.sort((a: any, b: any) => b.datum - a.datum);
       
       setSessions(schuelerSessions);
       
