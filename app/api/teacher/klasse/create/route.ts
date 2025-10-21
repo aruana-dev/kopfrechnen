@@ -41,10 +41,19 @@ export async function POST(request: NextRequest) {
     // Create class
     const klasse = await jsonbin.createKlasse(teacher.id, name.trim());
 
-    // Update teacher with new class ID
+    // Load full teacher data from Bin (includes passwordHash!)
+    const fullTeacher = await jsonbin.readBin(teacher.id);
+    if (!fullTeacher) {
+      return NextResponse.json(
+        { error: 'Lehrer nicht gefunden' },
+        { status: 404 }
+      );
+    }
+
+    // Update teacher with new class ID (preserves passwordHash)
     const updatedTeacher = {
-      ...teacher,
-      klassen: [...(teacher.klassen || []), klasse.id],
+      ...fullTeacher,
+      klassen: [...(fullTeacher.klassen || []), klasse.id],
     };
     await jsonbin.updateBin(teacher.id, updatedTeacher);
 
