@@ -45,8 +45,8 @@ export default function StudentErgebnissePage() {
       
       // Lade alle Sessions für diesen Schüler
       const alleSessions = klasse.sessions || [];
-      const schuelerSessions = alleSessions.filter(session => 
-        session.ergebnisse.some(erg => erg.schuelerCode === schueler.code)
+      const schuelerSessions = alleSessions.filter((session: any) => 
+        session.ergebnisse.some((erg: any) => erg.schuelerCode === schueler.code)
       );
       
       // Sortiere nach Datum (neueste zuerst)
