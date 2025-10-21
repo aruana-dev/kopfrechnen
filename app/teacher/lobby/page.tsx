@@ -28,21 +28,40 @@ function TeacherLobbyContent() {
 
   // Lade Session per Code, falls nicht im Store
   useEffect(() => {
-    if (!socket || !code) return;
+    console.log('🔄 useEffect [session-loader]:', {
+      hasSocket: !!socket,
+      hasCode: !!code,
+      hasSession: !!session,
+      code
+    });
+    
+    if (!socket) {
+      console.log('⏸️ Socket noch nicht verfügbar');
+      return;
+    }
+    
+    if (!code) {
+      console.log('⚠️ Kein Code in URL - redirect zu /teacher');
+      router.push('/teacher');
+      return;
+    }
     
     if (!session) {
-      console.log('Lehrer Lobby: Session nicht im Store, lade per Code:', code);
+      console.log('📡 Session nicht im Store, lade per Code:', code);
       socket.emit('get-session-by-code', { code });
       
       socket.once('session-loaded', ({ session: loadedSession }) => {
-        console.log('Lehrer Lobby: Session geladen:', loadedSession);
+        console.log('✅ Session erfolgreich geladen:', loadedSession);
         setSession(loadedSession);
       });
       
       socket.once('error', ({ message }) => {
-        console.error('Fehler beim Laden der Session:', message);
+        console.error('❌ Fehler beim Laden der Session:', message);
+        alert('Session nicht gefunden: ' + message);
         router.push('/teacher');
       });
+    } else {
+      console.log('✅ Session bereits im Store vorhanden');
     }
   }, [socket, code, session, setSession, router]);
 
@@ -111,9 +130,20 @@ function TeacherLobbyContent() {
   };
 
   if (!session || !code) {
+    console.log('🔍 Lobby Loading State:', {
+      hasSession: !!session,
+      hasCode: !!code,
+      code,
+      sessionInStore: session ? 'JA' : 'NEIN'
+    });
     return (
       <div data-role="teacher" className="min-h-screen flex items-center justify-center">
-        <p className="text-2xl">Lädt...</p>
+        <div className="text-center">
+          <div className="text-6xl mb-4">⏳</div>
+          <p className="text-2xl mb-4">Lädt Session...</p>
+          <p className="text-sm opacity-70">Code: {code || 'Fehlt'}</p>
+          <p className="text-sm opacity-70">Session: {session ? 'Geladen' : 'Wird geladen...'}</p>
+        </div>
       </div>
     );
   }
