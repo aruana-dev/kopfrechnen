@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useSocket } from '@/hooks/useSocket';
+import { sessionAPI } from '@/hooks/usePolling';
 import { useSessionStore } from '@/store/useSessionStore';
 import { useSound } from '@/hooks/useSound';
 
@@ -11,9 +11,10 @@ function TeacherLobbyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get('code');
-  const { socket } = useSocket();
   const { session, setSession } = useSessionStore();
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [previousTeilnehmerCount, setPreviousTeilnehmerCount] = useState(0);
+  const [previousStatus, setPreviousStatus] = useState<string>('');
   const { playSound, playBackgroundMusic, stopBackgroundMusic, isMuted, toggleMute } = useSound(true);
 
   // Hintergrundmusik starten
@@ -28,92 +29,73 @@ function TeacherLobbyContent() {
 
   // Lade Session per Code, falls nicht im Store
   useEffect(() => {
-    console.log('🔄 useEffect [session-loader]:', {
-      hasSocket: !!socket,
-      hasCode: !!code,
-      hasSession: !!session,
-      code
-    });
-    
-    if (!socket) {
-      console.log('⏸️ Socket noch nicht verfügbar');
-      return;
-    }
-    
-    if (!code) {
-      console.log('⚠️ Kein Code in URL - redirect zu /teacher');
-      router.push('/teacher');
-      return;
-    }
-    
-    if (!session) {
-      console.log('📡 Session nicht im Store, lade per Code:', code);
-      socket.emit('get-session-by-code', { code });
-      
-      socket.once('session-loaded', ({ session: loadedSession }) => {
-        console.log('✅ Session erfolgreich geladen:', loadedSession);
-        setSession(loadedSession);
-      });
-      
-      socket.once('error', ({ message }) => {
-        console.error('❌ Fehler beim Laden der Session:', message);
-        alert('Session nicht gefunden: ' + message);
+    const loadSession = async () => {
+      if (!code) {
+        console.log('⚠️ Kein Code in URL - redirect zu /teacher');
         router.push('/teacher');
-      });
-    } else {
-      console.log('✅ Session bereits im Store vorhanden');
-    }
-  }, [socket, code, session, setSession, router]);
+        return;
+      }
+      
+      if (!session) {
+        console.log('📡 Session nicht im Store, lade per Code:', code);
+        const loadedSession = await sessionAPI.getSessionByCode(code);
+        
+        if (loadedSession) {
+          console.log('✅ Session erfolgreich geladen:', loadedSession);
+          setSession(loadedSession);
+        } else {
+          console.error('❌ Session nicht gefunden');
+          alert('Session nicht gefunden!');
+          router.push('/teacher');
+        }
+      } else {
+        console.log('✅ Session bereits im Store vorhanden');
+      }
+    };
 
+    loadSession();
+  }, [code, session, setSession, router]);
+
+  // Polling: Überwache Session-Status
   useEffect(() => {
-    if (!socket) {
-      console.log('Lehrer Lobby: Socket noch nicht verfügbar');
-      return;
-    }
+    if (!session) return;
 
-    console.log('Lehrer Lobby: Registriere Event-Listener, Socket ID:', socket.id);
+    const pollInterval = setInterval(async () => {
+      const updatedSession = await sessionAPI.getSessionByCode(code!);
+      
+      if (updatedSession) {
+        // Prüfe auf neue Teilnehmer
+        if (updatedSession.teilnehmer.length > previousTeilnehmerCount) {
+          playSound('join.mp3');
+          setPreviousTeilnehmerCount(updatedSession.teilnehmer.length);
+        }
 
-    const handleTeilnehmerJoined = ({ teilnehmer, session: updatedSession }: any) => {
-      console.log('Lehrer: Teilnehmer beigetreten Event empfangen!', teilnehmer.name, updatedSession);
-      setSession(updatedSession);
-      playSound('join.mp3'); // Sound beim Beitritt
-    };
+        // Prüfe auf Status-Änderung
+        if (updatedSession.status !== previousStatus) {
+          setPreviousStatus(updatedSession.status);
+          
+          if (updatedSession.status === 'countdown') {
+            console.log('📢 Countdown gestartet');
+            setCountdown(10);
+            stopBackgroundMusic();
+            playSound('countdown.mp3');
+          } else if (updatedSession.status === 'running') {
+            console.log('🚀 Session gestartet');
+            playSound('start.mp3');
+            setTimeout(() => {
+              router.push('/teacher/session');
+            }, 500);
+          }
+        }
 
-    const handleTeilnehmerLeft = ({ session: updatedSession }: any) => {
-      console.log('Lehrer: Teilnehmer verlassen Event empfangen!');
-      setSession(updatedSession);
-    };
+        setSession(updatedSession);
+      }
+    }, 2000); // Poll alle 2 Sekunden
 
-    const handleCountdown = () => {
-      console.log('Lehrer: Countdown gestartet');
-      setCountdown(10);
-      stopBackgroundMusic(); // Musik stoppen
-      playSound('countdown.mp3'); // Countdown Sound
-    };
+    return () => clearInterval(pollInterval);
+  }, [session, code, previousTeilnehmerCount, previousStatus, playSound, stopBackgroundMusic, router, setSession]);
 
-    const handleSessionStarted = (data: any) => {
-      console.log('🎉 Lehrer: session-started Event empfangen!', data);
-      playSound('start.mp3'); // Start Sound
-      // Kurz warten, damit Sound abgespielt werden kann
-      setTimeout(() => {
-        console.log('→ Navigiere zu /teacher/session');
-        router.push('/teacher/session');
-      }, 500);
-    };
-
-    socket.on('teilnehmer-joined', handleTeilnehmerJoined);
-    socket.on('teilnehmer-left', handleTeilnehmerLeft);
-    socket.on('session-countdown', handleCountdown);
-    socket.on('session-started', handleSessionStarted);
-
-    return () => {
-      socket.off('teilnehmer-joined', handleTeilnehmerJoined);
-      socket.off('teilnehmer-left', handleTeilnehmerLeft);
-      socket.off('session-countdown', handleCountdown);
-      socket.off('session-started', handleSessionStarted);
-    };
-  }, [socket, router, setSession]);
-
+  // Countdown Timer
   useEffect(() => {
     if (countdown === null) return;
     
@@ -123,26 +105,19 @@ function TeacherLobbyContent() {
     }
   }, [countdown]);
 
-  const handleStart = () => {
-    if (!socket || !session) return;
+  const handleStart = async () => {
+    if (!session) return;
     console.log('🚀 Lehrer startet Session:', session.id);
-    socket.emit('start-session', { sessionId: session.id });
+    await sessionAPI.startSession(session.id);
   };
 
   if (!session || !code) {
-    console.log('🔍 Lobby Loading State:', {
-      hasSession: !!session,
-      hasCode: !!code,
-      code,
-      sessionInStore: session ? 'JA' : 'NEIN'
-    });
     return (
       <div data-role="teacher" className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">⏳</div>
           <p className="text-2xl mb-4">Lädt Session...</p>
           <p className="text-sm opacity-70">Code: {code || 'Fehlt'}</p>
-          <p className="text-sm opacity-70">Session: {session ? 'Geladen' : 'Wird geladen...'}</p>
         </div>
       </div>
     );
@@ -160,6 +135,7 @@ function TeacherLobbyContent() {
         >
           {isMuted ? '🔇' : '🔊'}
         </motion.button>
+
         {/* Session Code */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
@@ -211,7 +187,7 @@ function TeacherLobbyContent() {
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <AnimatePresence>
-              {session.teilnehmer.map((teilnehmer, index) => (
+              {session.teilnehmer.map((teilnehmer: any, index: number) => (
                 <motion.div
                   key={teilnehmer.id}
                   initial={{ scale: 0, rotate: -180 }}

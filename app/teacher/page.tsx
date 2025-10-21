@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { SessionSettings, Operation } from '@/types';
-import { useSocket } from '@/hooks/useSocket';
+import { sessionAPI } from '@/hooks/usePolling';
 import { useSessionStore } from '@/store/useSessionStore';
 
 const OPERATIONEN: { value: Operation; label: string; icon: string }[] = [
@@ -16,8 +16,8 @@ const OPERATIONEN: { value: Operation; label: string; icon: string }[] = [
 
 export default function TeacherPage() {
   const router = useRouter();
-  const { socket, connected } = useSocket();
   const { setSession, setRole } = useSessionStore();
+  const [loading, setLoading] = useState(false);
 
   const [settings, setSettings] = useState<SessionSettings>({
     reihen: [2, 3, 5],
@@ -61,11 +61,7 @@ export default function TeacherPage() {
     }
   };
 
-  const handleCreateSession = () => {
-    if (!socket || !connected) {
-      console.log('Lehrer: Socket nicht verfügbar');
-      return;
-    }
+  const handleCreateSession = async () => {
     if (settings.reihen.length === 0) {
       alert('Bitte mindestens eine Reihe auswählen!');
       return;
@@ -75,23 +71,26 @@ export default function TeacherPage() {
       return;
     }
 
-    console.log('Lehrer: Erstelle Session, Socket ID:', socket.id);
+    setLoading(true);
+    console.log('Lehrer: Erstelle Session...');
     
-    // Entferne alte Event-Handler um Duplikate zu vermeiden
-    socket.off('session-created');
-    
-    // Registriere neuen Event-Handler
-    socket.on('session-created', ({ sessionId, code, session }) => {
-      console.log('Lehrer: Session erstellt!', sessionId, code);
-      setSession(session);
-      setRole('teacher');
-      // Entferne Handler nach Ausführung
-      socket.off('session-created');
-      router.push(`/teacher/lobby?code=${code}`);
-    });
-    
-    // Sende create-session Event
-    socket.emit('create-session', settings);
+    try {
+      const result = await sessionAPI.createSession(settings);
+      
+      if (result) {
+        console.log('✅ Session erstellt:', result.sessionId, result.code);
+        setSession(result.session);
+        setRole('teacher');
+        router.push(`/teacher/lobby?code=${result.code}`);
+      } else {
+        alert('Fehler beim Erstellen der Session');
+      }
+    } catch (error) {
+      console.error('Fehler:', error);
+      alert('Fehler beim Erstellen der Session');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -287,10 +286,10 @@ export default function TeacherPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleCreateSession}
-            disabled={!connected}
+            disabled={loading}
             className="kahoot-button bg-kahoot-pink w-full disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {connected ? '🚀 Session erstellen' : '⏳ Verbinde...'}
+            {loading ? '⏳ Erstelle Session...' : '🚀 Session erstellen'}
           </motion.button>
         </div>
       </motion.div>
