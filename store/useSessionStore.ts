@@ -8,6 +8,7 @@ interface SessionStore {
   previousStats: SessionStats | null;
   currentAufgabeIndex: number;
   startzeit: number | null;
+  teilnehmerId: string | null;
   
   setSession: (session: Session) => void;
   setRole: (role: 'teacher' | 'student') => void;
@@ -15,6 +16,7 @@ interface SessionStore {
   setPreviousStats: (stats: SessionStats) => void;
   setCurrentAufgabeIndex: (index: number) => void;
   setStartzeit: (zeit: number) => void;
+  setTeilnehmerId: (id: string) => void;
   reset: () => void;
   resetForRevanche: () => void;
 }
@@ -26,6 +28,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
   previousStats: null,
   currentAufgabeIndex: 0,
   startzeit: null,
+  teilnehmerId: null,
   
   setSession: (session) => set({ session }),
   setRole: (role) => set({ role }),
@@ -33,6 +36,7 @@ export const useSessionStore = create<SessionStore>((set) => ({
   setPreviousStats: (stats) => set({ previousStats: stats }),
   setCurrentAufgabeIndex: (index) => set({ currentAufgabeIndex: index }),
   setStartzeit: (zeit) => set({ startzeit: zeit }),
+  setTeilnehmerId: (id) => set({ teilnehmerId: id }),
   reset: () => set({ 
     session: null, 
     role: null, 
@@ -40,12 +44,13 @@ export const useSessionStore = create<SessionStore>((set) => ({
     previousStats: null,
     currentAufgabeIndex: 0,
     startzeit: null,
+    teilnehmerId: null,
   }),
   resetForRevanche: () => set({ 
     session: null,
     currentAufgabeIndex: 0,
     startzeit: null,
-    // Role, stats und previousStats bleiben erhalten!
+    // Role, stats, previousStats und teilnehmerId bleiben erhalten!
   }),
 }));
 

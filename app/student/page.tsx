@@ -3,54 +3,54 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useSocket } from '@/hooks/useSocket';
+import { sessionAPI } from '@/hooks/usePolling';
 import { useSessionStore } from '@/store/useSessionStore';
 
 export default function StudentPage() {
   const router = useRouter();
-  const { socket, connected } = useSocket();
-  const { setSession, setRole } = useSessionStore();
+  const { setSession, setRole, setTeilnehmerId } = useSessionStore();
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleJoin = () => {
-    if (!socket || !connected) {
-      console.log('Socket nicht verfügbar oder nicht verbunden');
-      return;
-    }
+  const handleJoin = async () => {
     if (!code || !name) {
       setError('Bitte Code und Name eingeben!');
       return;
     }
 
-    console.log('Schüler: Versuche beizutreten mit Code:', code, 'Name:', name, 'Socket ID:', socket.id);
+    setLoading(true);
+    console.log('Schüler: Versuche beizutreten mit Code:', code, 'Name:', name);
     
-    // Entferne alte Event-Handler um Duplikate zu vermeiden
-    socket.off('error');
-    socket.off('teilnehmer-joined');
-    
-    // Registriere Event-Handler
-    socket.on('error', ({ message }) => {
-      console.error('Schüler: Fehler beim Beitreten:', message);
-      setError(message);
-      // Cleanup nach Fehler
-      socket.off('error');
-      socket.off('teilnehmer-joined');
-    });
+    try {
+      // Hole Session per Code
+      const session = await sessionAPI.getSessionByCode(code.toUpperCase());
+      
+      if (!session) {
+        setError('Session nicht gefunden!');
+        setLoading(false);
+        return;
+      }
 
-    socket.on('teilnehmer-joined', ({ teilnehmer, session }) => {
-      console.log('Schüler: Erfolgreich beigetreten!', teilnehmer, session);
-      setSession(session);
-      setRole('student');
-      // Cleanup nach Erfolg
-      socket.off('error');
-      socket.off('teilnehmer-joined');
-      router.push('/student/lobby');
-    });
-    
-    // Sende join-session Event
-    socket.emit('join-session', { code, name });
+      // Trete Session bei
+      const result = await sessionAPI.joinSession(session.id, name);
+      
+      if (result) {
+        console.log('✅ Erfolgreich beigetreten!', result);
+        setSession(result.session);
+        setRole('student');
+        setTeilnehmerId(result.teilnehmer.id);
+        router.push('/student/lobby');
+      } else {
+        setError('Fehler beim Beitreten!');
+      }
+    } catch (err) {
+      console.error('Fehler:', err);
+      setError('Fehler beim Beitreten!');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -83,7 +83,7 @@ export default function StudentPage() {
               type="text"
               value={code}
               onChange={(e) => {
-                setCode(e.target.value);
+                setCode(e.target.value.toUpperCase());
                 setError('');
               }}
               placeholder="123456"
@@ -104,15 +104,16 @@ export default function StudentPage() {
                 setError('');
               }}
               placeholder="Max Mustermann"
+              maxLength={20}
               className="w-full px-6 py-4 text-xl rounded-xl bg-white/20 border-2 border-white/30 focus:border-white/60 outline-none"
             />
           </div>
 
           {error && (
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-kahoot-red/80 p-4 rounded-xl text-center"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/20 border-2 border-red-500 rounded-xl p-4 text-center"
             >
               {error}
             </motion.div>
@@ -122,15 +123,11 @@ export default function StudentPage() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={handleJoin}
-            disabled={!connected || !code || !name}
-            className="kahoot-button bg-kahoot-green w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
+            className="kahoot-button bg-kahoot-green w-full disabled:opacity-50"
           >
-            {connected ? '🚀 Beitreten' : '⏳ Verbinde...'}
+            {loading ? '⏳ Trete bei...' : '🚀 Beitreten'}
           </motion.button>
-        </div>
-
-        <div className="mt-4 text-center text-sm opacity-70">
-          Socket Status: {connected ? '✅ Verbunden' : '❌ Nicht verbunden'}
         </div>
       </motion.div>
     </div>

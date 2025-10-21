@@ -3,15 +3,14 @@
 import { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useSocket } from '@/hooks/useSocket';
+import { sessionAPI } from '@/hooks/usePolling';
 import { useSessionStore } from '@/store/useSessionStore';
 import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { getOperationSymbol } from '@/lib/aufgaben-generator';
 
 export default function StudentQuiz() {
   const router = useRouter();
-  const { socket } = useSocket();
-  const { session, currentAufgabeIndex, setCurrentAufgabeIndex, startzeit, setStartzeit } = useSessionStore();
+  const { session, currentAufgabeIndex, setCurrentAufgabeIndex, startzeit, setStartzeit, teilnehmerId } = useSessionStore();
   
   const [antwort, setAntwort] = useState('');
   const [aufgabeStartzeit, setAufgabeStartzeit] = useState(Date.now());
@@ -223,15 +222,16 @@ export default function StudentQuiz() {
         }
       }
     } else {
-      // Multi-Player-Modus: Socket verwenden
-      if (!socket) return;
+      // Multi-Player-Modus: API verwenden
+      if (!teilnehmerId) return;
 
-      socket.emit('submit-antwort', {
-        sessionId: session.id,
-        aufgabeId: currentAufgabe.id,
-        antwort: antwortWert,
-        zeit,
-      });
+      await sessionAPI.submitAntwort(
+        session.id,
+        teilnehmerId,
+        currentAufgabe.id,
+        antwortWert,
+        zeit
+      );
 
       if (currentAufgabeIndex < session.aufgaben.length - 1) {
         setCurrentAufgabeIndex(currentAufgabeIndex + 1);

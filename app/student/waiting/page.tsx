@@ -3,55 +3,89 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useSocket } from '@/hooks/useSocket';
+import { sessionAPI } from '@/hooks/usePolling';
 import { useSessionStore } from '@/store/useSessionStore';
-import SeriesCatcher from '@/app/components/SeriesCatcher';
 
 export default function StudentWaiting() {
   const router = useRouter();
-  const { socket } = useSocket();
-  const { session } = useSessionStore();
+  const { session, setSession } = useSessionStore();
 
   useEffect(() => {
-    if (!socket) return;
+    if (!session) {
+      router.push('/student');
+      return;
+    }
 
-    const handleSessionFinished = ({ rangliste }: any) => {
-      console.log('Schüler Waiting: Session beendet Event empfangen, Rangliste:', rangliste);
-      // Stats im Store setzen
-      useSessionStore.getState().setStats({ teilnehmer: rangliste });
-      router.push('/results');
-    };
+    const pollInterval = setInterval(async () => {
+      const updatedSession = await sessionAPI.getSessionByCode(session.code);
+      
+      if (updatedSession) {
+        setSession(updatedSession);
 
-    socket.on('session-finished', handleSessionFinished);
+        if (updatedSession.status === 'finished') {
+          // Session ist beendet, zur Ergebnis-Seite
+          router.push('/results');
+        }
+      }
+    }, 2000);
 
-    return () => {
-      socket.off('session-finished', handleSessionFinished);
-    };
-  }, [socket, router]);
+    return () => clearInterval(pollInterval);
+  }, [session, router, setSession]);
 
-  // Finde eine Reihe aus den Session-Settings für das Spiel
-  const gameSeries = session?.settings.reihen?.[0] || 2;
+  if (!session) {
+    return (
+      <div data-role="student" className="min-h-screen flex items-center justify-center">
+        <p className="text-2xl">Lädt...</p>
+      </div>
+    );
+  }
+
+  const fertigueTeilnehmer = session.teilnehmer.filter(
+    (t: any) => t.antworten.length === session.aufgaben.length
+  );
 
   return (
-    <div data-role="student" className="min-h-screen p-4 flex items-center justify-center">
-      <div className="max-w-2xl w-full">
+    <div data-role="student" className="min-h-screen flex items-center justify-center p-4">
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="text-center"
+      >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 180, 360],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+          }}
+          className="text-8xl mb-8"
         >
-          <div className="text-center mb-4">
-            <h1 className="text-3xl font-bold mb-2">
-              Fertig! 🎉
-            </h1>
-            <p className="text-xl opacity-80">
-              Warte auf die anderen Teilnehmer...
-            </p>
-          </div>
-
-          {/* Mini-Game während des Wartens */}
-          <SeriesCatcher series={gameSeries} />
+          ⏳
         </motion.div>
-      </div>
+
+        <h1 className="text-4xl font-bold mb-4">Super! Du bist fertig! 🎉</h1>
+        <p className="text-2xl mb-8">
+          Warte, bis alle anderen fertig sind...
+        </p>
+
+        <div className="kahoot-card inline-block">
+          <p className="text-xl">
+            {fertigueTeilnehmer.length} / {session.teilnehmer.length} fertig
+          </p>
+          <div className="w-full bg-white/20 rounded-full h-4 mt-4">
+            <motion.div
+              className="bg-kahoot-green h-4 rounded-full"
+              initial={{ width: 0 }}
+              animate={{
+                width: `${(fertigueTeilnehmer.length / session.teilnehmer.length) * 100}%`,
+              }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 }
