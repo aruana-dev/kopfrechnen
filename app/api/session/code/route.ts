@@ -3,12 +3,18 @@ import { sessionStore } from '@/lib/session-store';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { code: string } }
-) {
+// GET /api/session/code?code=XXXXX
+export async function GET(request: NextRequest) {
   try {
-    const { code } = params;
+    const { searchParams } = new URL(request.url);
+    const code = searchParams.get('code');
+    
+    if (!code) {
+      return NextResponse.json(
+        { error: 'Code Parameter fehlt' },
+        { status: 400 }
+      );
+    }
     
     const session = sessionStore.getSessionByCode(code);
     
@@ -31,4 +37,3 @@ export async function GET(
     );
   }
 }
-

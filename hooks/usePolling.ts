@@ -92,7 +92,7 @@ export const sessionAPI = {
   // Session per Code laden
   async getSessionByCode(code: string): Promise<any | null> {
     try {
-      const response = await fetch(`/api/session/${code}`);
+      const response = await fetch(`/api/session/code?code=${code}`);
       if (response.ok) {
         const { session } = await response.json();
         return session;
