@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useServerAuthStore } from '@/store/useServerAuthStore';
-import { jsonbin } from '@/lib/jsonbin';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -50,10 +49,12 @@ export default function StudentDashboard() {
     if (!schueler) return;
 
     try {
-      const result = await jsonbin.findKlasseBySchuelerCode(schueler.code);
-      if (!result) return;
-
-      const { klasse } = result;
+      // Lade Daten über API Route
+      const response = await fetch('/api/schueler/sessions');
+      if (!response.ok) return;
+      
+      const data = await response.json();
+      const klasse = { sessions: data.sessions };
       
       // Filtere alle Sessions, in denen dieser Schüler mitgemacht hat
       const sessions = (klasse.sessions || [])

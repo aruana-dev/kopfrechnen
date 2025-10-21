@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useServerAuthStore } from '@/store/useServerAuthStore';
-import { jsonbin, SessionResult } from '@/lib/jsonbin';
+import { SessionResult } from '@/lib/jsonbin';
 
 export default function StudentErgebnissePage() {
   const router = useRouter();
@@ -33,14 +33,15 @@ export default function StudentErgebnissePage() {
     
     setLoading(true);
     try {
-      // Lade Klasse direkt über jsonbin
-      const result = await jsonbin.findKlasseBySchuelerCode(schueler.code);
-      if (!result) {
+      // Lade Daten über API Route
+      const response = await fetch('/api/schueler/sessions');
+      if (!response.ok) {
         router.push('/student/code');
         return;
       }
-
-      const { klasse } = result;
+      
+      const data = await response.json();
+      const klasse = { sessions: data.sessions };
       
       // Lade alle Sessions für diesen Schüler
       const alleSessions = klasse.sessions || [];

@@ -7,7 +7,6 @@ import { useSocket } from '@/hooks/useSocket';
 import { useSessionStore } from '@/store/useSessionStore';
 import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { getOperationSymbol } from '@/lib/aufgaben-generator';
-import { jsonbin } from '@/lib/jsonbin';
 
 export default function StudentQuiz() {
   const router = useRouter();
@@ -237,49 +236,29 @@ export default function StudentQuiz() {
     console.log('📊 Setze Stats im Store');
     useSessionStore.getState().setStats({ teilnehmer: rangliste });
 
-    // Speichere in JSONBin.io wenn Schüler-Code vorhanden
+    // Speichere über API Route
     try {
-      console.log('🔍 Suche Klasse für Code:', schuelerCode);
-      const result = await jsonbin.findKlasseBySchuelerCode(schuelerCode);
+      console.log('💾 Speichere Ergebnis für Code:', schuelerCode);
       
-      if (result) {
-        console.log('✅ Klasse gefunden, speichere jetzt...');
-        
-        // Erweitere Antworten um Aufgaben-Details
-        const erweiterteAntworten = teilnehmer.antworten.map((antwort: any) => {
-          const aufgabe = session.aufgaben.find(a => a.id === antwort.aufgabeId);
-          return {
-            ...antwort,
-            richtig: antwort.korrekt, // Füge 'richtig' hinzu für Kompatibilität
-            aufgabe: aufgabe ? {
-              zahl1: aufgabe.zahl1,
-              zahl2: aufgabe.zahl2,
-              operation: aufgabe.operation,
-              reihe: aufgabe.reihe,
-              ergebnis: aufgabe.ergebnis
-            } : null
-          };
-        });
-
-        const sessionResult = {
+      const response = await fetch('/api/sessions/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           sessionId: session.id,
-          datum: Date.now(),
-          settings: session.settings,
-          ergebnisse: [{
-            schuelerCode,
-            nickname: nickname || 'Unbekannt',
-            punkte,
-            gesamtZeit: teilnehmer.gesamtZeit,
-            durchschnittsZeit: teilnehmer.durchschnittsZeit,
-            antworten: erweiterteAntworten,
-          }],
-        };
-        
-        await jsonbin.saveSessionResult(result.binId, sessionResult);
-        
-        console.log('✅ Solo-Ergebnis gespeichert in JSONBin.io für Session:', session.id);
+          schuelerCode,
+          nickname: nickname || 'Unbekannt',
+          punkte,
+          gesamtZeit: teilnehmer.gesamtZeit,
+          durchschnittsZeit: teilnehmer.durchschnittsZeit,
+          antworten: teilnehmer.antworten,
+          aufgaben: session.aufgaben
+        })
+      });
+      
+      if (response.ok) {
+        console.log('✅ Solo-Ergebnis gespeichert für Session:', session.id);
       } else {
-        console.log('❌ Keine Klasse gefunden für Code:', schuelerCode);
+        console.log('❌ Fehler beim Speichern:', await response.text());
       }
     } catch (error) {
       console.error('❌ Fehler beim Speichern:', error);

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
 import { useServerAuthStore } from '@/store/useServerAuthStore';
-import { jsonbin, SessionResult } from '@/lib/jsonbin';
+import { SessionResult } from '@/lib/jsonbin';
 
 export default function StudentSessionDetailPage() {
   const router = useRouter();
@@ -35,32 +35,22 @@ export default function StudentSessionDetailPage() {
     
     setLoading(true);
     try {
-      // Lade Klasse direkt über jsonbin
-      const result = await jsonbin.findKlasseBySchuelerCode(schueler.code);
-      if (!result) {
+      // Lade Daten über API Route
+      const response = await fetch(`/api/schueler/sessions/${params.sessionId}`);
+      if (!response.ok) {
         router.push('/student/code');
         return;
       }
-
-      const { klasse } = result;
       
-      // Finde die Session
-      const session = klasse.sessions?.find(s => s.sessionId === params.sessionId);
-      if (!session) {
+      const data = await response.json();
+      
+      if (!data.session || !data.ergebnis) {
         router.push('/student/ergebnisse');
         return;
       }
       
-      setSession(session);
-      
-      // Finde das Ergebnis des Schülers
-      const ergebnis = session.ergebnisse.find(erg => erg.schuelerCode === schueler.code);
-      if (!ergebnis) {
-        router.push('/student/ergebnisse');
-        return;
-      }
-      
-      setErgebnis(ergebnis);
+      setSession(data.session);
+      setErgebnis(data.ergebnis);
       
     } catch (error) {
       console.error('Fehler beim Laden der Session-Daten:', error);
