@@ -3,39 +3,60 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { useSocket } from '@/hooks/useSocket';
+import { sessionAPI } from '@/hooks/usePolling';
 import { useSessionStore } from '@/store/useSessionStore';
 
 export default function TeacherSession() {
   const router = useRouter();
-  const { socket } = useSocket();
   const { session, stats, setStats, setSession } = useSessionStore();
 
+  // Polling für Session-Updates
   useEffect(() => {
-    if (!socket) return;
+    if (!session) {
+      router.push('/teacher');
+      return;
+    }
 
-    // Empfange Fortschritts-Updates
-    socket.on('progress-update', ({ session: updatedSession }) => {
-      console.log('📊 Fortschritts-Update empfangen');
-      setSession(updatedSession);
-    });
+    const pollInterval = setInterval(async () => {
+      try {
+        const updatedSession = await sessionAPI.getSessionByCode(session.code);
+        
+        if (updatedSession) {
+          setSession(updatedSession);
 
-    socket.on('session-finished', ({ rangliste }) => {
-      setStats({ teilnehmer: rangliste });
-      router.push('/results');
-    });
+          // Prüfe ob Session beendet ist
+          if (updatedSession.status === 'finished') {
+            // Berechne Rangliste
+            const rangliste = updatedSession.teilnehmer
+              .map((t: any) => ({
+                id: t.id,
+                name: t.name,
+                punkte: t.antworten.filter((a: any) => a.korrekt).length,
+                gesamtZeit: t.gesamtZeit,
+                durchschnittsZeit: t.durchschnittsZeit,
+              }))
+              .sort((a: any, b: any) => 
+                b.punkte !== a.punkte ? b.punkte - a.punkte : a.gesamtZeit - b.gesamtZeit
+              )
+              .map((t: any, index: number) => ({ ...t, rang: index + 1 }));
+            
+            setStats({ teilnehmer: rangliste });
+            router.push('/results');
+          }
+        }
+      } catch (error) {
+        console.error('Polling-Fehler:', error);
+      }
+    }, 2000);
 
-    return () => {
-      socket.off('progress-update');
-      socket.off('session-finished');
-    };
-  }, [socket, router, setStats, setSession]);
+    return () => clearInterval(pollInterval);
+  }, [session, router, setStats, setSession]);
 
-  const handleAbort = () => {
-    if (!socket || !session) return;
+  const handleAbort = async () => {
+    if (!session) return;
     
     if (confirm('Quiz wirklich abbrechen? Die Rangliste wird mit den aktuellen Ergebnissen erstellt.')) {
-      socket.emit('abort-session', session.id);
+      await sessionAPI.abortSession(session.id);
     }
   };
 
@@ -63,9 +84,9 @@ export default function TeacherSession() {
             <h2 className="text-2xl font-bold mb-6">Teilnehmer-Fortschritt</h2>
             
             <div className="space-y-4">
-              {session.teilnehmer.map((teilnehmer) => {
+              {session.teilnehmer.map((teilnehmer: any) => {
                 const progress = (teilnehmer.antworten.length / session.aufgaben.length) * 100;
-                const korrekteAntworten = teilnehmer.antworten.filter(a => a.korrekt).length;
+                const korrekteAntworten = teilnehmer.antworten.filter((a: any) => a.korrekt).length;
                 
                 return (
                   <div key={teilnehmer.id} className="bg-white/10 p-4 rounded-xl">
