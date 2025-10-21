@@ -312,7 +312,7 @@ export default function StudentQuiz() {
 
   if (!session || !currentAufgabe) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div data-role="student" className="min-h-screen flex items-center justify-center">
         <p className="text-2xl">Lädt...</p>
       </div>
     );

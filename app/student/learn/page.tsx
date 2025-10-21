@@ -44,7 +44,7 @@ export default function StudentLearnPage() {
 
   if (!isHydrated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div data-role="student" className="min-h-screen flex items-center justify-center">
         <p className="text-2xl">Lädt...</p>
       </div>
     );
@@ -111,7 +111,7 @@ export default function StudentLearnPage() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
+    <div data-role="student" className="min-h-screen p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <button
           onClick={() => router.push('/student/dashboard')}

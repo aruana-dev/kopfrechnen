@@ -28,7 +28,7 @@ export default function AddBinPage() {
   };
 
   return (
-    <div className="min-h-screen p-4 flex items-center justify-center">
+    <div data-role="teacher" className="min-h-screen p-4 flex items-center justify-center">
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

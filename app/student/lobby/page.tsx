@@ -51,7 +51,7 @@ export default function StudentLobby() {
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div data-role="student" className="min-h-screen flex items-center justify-center">
         <p className="text-2xl">Lädt...</p>
       </div>
     );
@@ -61,7 +61,7 @@ export default function StudentLobby() {
   const gameSeries = session.settings.reihen?.[0] || 2;
 
   return (
-    <div className="min-h-screen p-4 flex items-center justify-center">
+    <div data-role="student" className="min-h-screen p-4 flex items-center justify-center">
       <div className="max-w-2xl w-full">
         {/* Countdown Overlay */}
         <AnimatePresence>

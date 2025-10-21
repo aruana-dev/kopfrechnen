@@ -87,7 +87,7 @@ export default function StudentErgebnissePage() {
 
   if (!isHydrated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div data-role="student" className="min-h-screen flex items-center justify-center">
         <p className="text-2xl">Lädt...</p>
       </div>
     );
@@ -95,7 +95,7 @@ export default function StudentErgebnissePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div data-role="student" className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-xl">Lade deine Ergebnisse...</p>
@@ -105,7 +105,7 @@ export default function StudentErgebnissePage() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
+    <div data-role="student" className="min-h-screen p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">

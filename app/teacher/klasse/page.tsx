@@ -35,7 +35,7 @@ export default function KlassePage() {
 
   if (!isHydrated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div data-role="teacher" className="min-h-screen flex items-center justify-center">
         <p className="text-2xl">Lädt...</p>
       </div>
     );
@@ -246,7 +246,7 @@ export default function KlassePage() {
   if (!activeKlasse) return null;
 
   return (
-    <div className="min-h-screen p-4 md:p-8">
+    <div data-role="teacher" className="min-h-screen p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
