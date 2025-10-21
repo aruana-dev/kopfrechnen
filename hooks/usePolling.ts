@@ -70,12 +70,12 @@ export function usePolling(sessionId: string | null, options: PollingOptions = {
 // Session-spezifische Helper Functions
 export const sessionAPI = {
   // Session erstellen
-  async createSession(settings: any): Promise<{ sessionId: string; code: string; session: any } | null> {
+  async createSession(settings: any, oldSessionId?: string): Promise<{ sessionId: string; code: string; session: any } | null> {
     try {
       const response = await fetch('/api/session/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings }),
+        body: JSON.stringify({ settings, oldSessionId }),
       });
       
       if (response.ok) {

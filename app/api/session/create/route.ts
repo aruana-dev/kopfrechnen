@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { settings } = await request.json();
+    const { settings, oldSessionId } = await request.json();
     
     if (!settings) {
       return NextResponse.json(
@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { session, code } = sessionStore.createSession(settings);
+    const { session, code } = sessionStore.createSession(settings, oldSessionId);
     
     return NextResponse.json({
       success: true,

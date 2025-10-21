@@ -27,6 +27,7 @@ export interface Session {
   status: 'lobby' | 'countdown' | 'running' | 'finished';
   createdAt: number;
   startedAt?: number;
+  revancheCode?: string; // Code der Revanche-Session (falls eine erstellt wurde)
 }
 
 class SessionStore {
@@ -34,7 +35,7 @@ class SessionStore {
   private codeToSessionId: Map<string, string> = new Map();
 
   // Session erstellen
-  createSession(settings: any): { session: Session; code: string } {
+  createSession(settings: any, oldSessionId?: string): { session: Session; code: string } {
     const sessionId = nanoid();
     const code = this.generateCode();
     
@@ -50,6 +51,15 @@ class SessionStore {
     
     this.sessions.set(sessionId, session);
     this.codeToSessionId.set(code, sessionId);
+    
+    // Wenn dies eine Revanche ist, verlinke die alte Session
+    if (oldSessionId) {
+      const oldSession = this.sessions.get(oldSessionId);
+      if (oldSession) {
+        oldSession.revancheCode = code;
+        console.log(`🔄 Revanche-Link gesetzt: ${oldSessionId} -> ${code}`);
+      }
+    }
     
     console.log(`📝 Session erstellt: ${sessionId}, Code: ${code}`);
     return { session, code };

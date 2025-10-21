@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSessionStore } from '@/store/useSessionStore';
+import { sessionAPI } from '@/hooks/usePolling';
 import { useSound } from '@/hooks/useSound';
 
 export default function Results() {
   const router = useRouter();
-  const { stats, previousStats, role, reset } = useSessionStore();
+  const { stats, previousStats, role, reset, setPreviousStats, resetForRevanche, session, setSession, setRole, setTeilnehmerId } = useSessionStore();
   const { playSound } = useSound(role === 'teacher');
+  const [revancheCode, setRevancheCode] = useState<string | null>(null);
+  const [isCreatingRevanche, setIsCreatingRevanche] = useState(false);
 
   // Sounds abspielen wenn Ergebnisse angezeigt werden
   useEffect(() => {
@@ -34,11 +37,98 @@ export default function Results() {
     router.push('/');
   };
 
-  // TODO: Revanche-Funktion mit Polling neu implementieren
-  const handleRevanche = () => {
-    // Temporär deaktiviert - wird mit Polling neu implementiert
-    alert('Revanche-Funktion wird bald verfügbar sein!');
+  const handleRevanche = async () => {
+    if (!session) return;
+    
+    setIsCreatingRevanche(true);
+    
+    // Aktuelle Stats als previousStats speichern
+    if (stats) {
+      setPreviousStats(stats);
+    }
+    
+    // Für Revanche zurücksetzen
+    resetForRevanche();
+    
+    // Lehrer erstellt neue Session mit gleichen Einstellungen
+    if (role === 'teacher') {
+      console.log('🔄 Lehrer: Starte Revanche mit Settings:', session.settings);
+      
+      try {
+        // Erstelle neue Session und verlinke mit alter Session
+        const result = await sessionAPI.createSession(session.settings, session.id);
+        
+        if (result) {
+          console.log('✅ Revanche-Session erstellt:', result.sessionId, result.code);
+          setRevancheCode(result.code);
+          setSession(result.session);
+          setRole('teacher');
+          
+          // Kurz warten, dann zur Lobby
+          setTimeout(() => {
+            router.push(`/teacher/lobby?code=${result.code}`);
+          }, 500);
+        } else {
+          alert('Fehler beim Erstellen der Revanche-Session');
+          setIsCreatingRevanche(false);
+        }
+      } catch (error) {
+        console.error('Fehler:', error);
+        alert('Fehler beim Erstellen der Revanche-Session');
+        setIsCreatingRevanche(false);
+      }
+    }
   };
+
+  // Schüler: Polling für Revanche-Session
+  useEffect(() => {
+    if (role !== 'student' || !session || revancheCode) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        // Prüfe, ob die alte Session jetzt einen revancheCode hat
+        const updatedSession = await sessionAPI.getSessionByCode(session.code);
+        
+        if (updatedSession?.revancheCode) {
+          console.log('🔄 Schüler: Revanche erkannt! Code:', updatedSession.revancheCode);
+          setRevancheCode(updatedSession.revancheCode);
+          
+          // Finde meinen Namen aus der Stats
+          const meinName = stats?.teilnehmer.find(t => t.rang === 1)?.name || 
+                          stats?.teilnehmer[0]?.name || 
+                          'Spieler';
+          
+          // Speichere vorherige Stats
+          if (stats) {
+            setPreviousStats(stats);
+          }
+          resetForRevanche();
+          
+          // Auto-Join zur Revanche
+          const revancheSession = await sessionAPI.getSessionByCode(updatedSession.revancheCode);
+          
+          if (revancheSession) {
+            const result = await sessionAPI.joinSession(revancheSession.id, meinName);
+            
+            if (result) {
+              console.log('✅ Schüler: Auto-Join zur Revanche erfolgreich');
+              setSession(result.session);
+              setRole('student');
+              setTeilnehmerId(result.teilnehmer.id);
+              
+              setTimeout(() => {
+                router.push('/student/lobby');
+              }, 500);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Polling-Fehler:', error);
+      }
+    }, 2000); // Poll alle 2 Sekunden
+
+    return () => clearInterval(pollInterval);
+  }, [role, session, revancheCode, stats, router, setSession, setRole, setTeilnehmerId, setPreviousStats, resetForRevanche]);
 
   if (!stats) {
     return (
@@ -182,18 +272,34 @@ export default function Results() {
             </motion.button>
           </div>
         ) : (
-          // Multi-Player oder Lehrer: Zurück zur Startseite
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleBackToHome}
-            className="kahoot-button bg-kahoot-purple w-full mt-12"
-          >
-            🏠 Zurück zur Startseite
-          </motion.button>
+          <>
+            {/* Hinweis für Schüler */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-8 p-4 bg-white/10 rounded-xl text-center"
+            >
+              <p className="text-lg">
+                ⏳ Warte auf Revanche vom Lehrer...
+              </p>
+              <p className="text-sm opacity-70 mt-2">
+                Du wirst automatisch der neuen Session beitreten!
+              </p>
+            </motion.div>
+            
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleBackToHome}
+              className="kahoot-button bg-kahoot-purple w-full mt-4"
+            >
+              🏠 Zurück zur Startseite
+            </motion.button>
+          </>
         )}
 
         {role === 'teacher' && (
@@ -205,9 +311,10 @@ export default function Results() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleRevanche}
-              className="kahoot-button bg-kahoot-orange w-full mt-4"
+              disabled={isCreatingRevanche}
+              className="kahoot-button bg-kahoot-orange w-full mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              🔄 Revanche (gleiche Einstellungen)
+              {isCreatingRevanche ? '⏳ Erstelle Revanche...' : '🔄 Revanche (gleiche Einstellungen)'}
             </motion.button>
             
             <motion.button
