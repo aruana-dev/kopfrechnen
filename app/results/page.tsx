@@ -9,7 +9,7 @@ import { useSound } from '@/hooks/useSound';
 
 export default function Results() {
   const router = useRouter();
-  const { stats, previousStats, role, reset, setPreviousStats, resetForRevanche, session, setSession, setRole, setTeilnehmerId } = useSessionStore();
+  const { stats, previousStats, role, reset, setPreviousStats, resetForRevanche, session, setSession, setRole, setTeilnehmerId, teilnehmerId } = useSessionStore();
   const { playSound } = useSound(role === 'teacher');
   const [revancheCode, setRevancheCode] = useState<string | null>(null);
   const [isCreatingRevanche, setIsCreatingRevanche] = useState(false);
@@ -93,10 +93,9 @@ export default function Results() {
           console.log('🔄 Schüler: Revanche erkannt! Code:', updatedSession.revancheCode);
           setRevancheCode(updatedSession.revancheCode);
           
-          // Finde meinen Namen aus der Stats
-          const meinName = stats?.teilnehmer.find(t => t.rang === 1)?.name || 
-                          stats?.teilnehmer[0]?.name || 
-                          'Spieler';
+          // Finde meinen Namen aus der aktuellen Session (per teilnehmerId)
+          const meinTeilnehmer = session.teilnehmer.find((t: any) => t.id === teilnehmerId);
+          const meinName = meinTeilnehmer?.name || 'Spieler';
           
           // Speichere vorherige Stats
           if (stats) {
@@ -128,7 +127,7 @@ export default function Results() {
     }, 2000); // Poll alle 2 Sekunden
 
     return () => clearInterval(pollInterval);
-  }, [role, session, revancheCode, stats, router, setSession, setRole, setTeilnehmerId, setPreviousStats, resetForRevanche]);
+  }, [role, session, revancheCode, stats, teilnehmerId, router, setSession, setRole, setTeilnehmerId, setPreviousStats, resetForRevanche]);
 
   if (!stats) {
     return (
