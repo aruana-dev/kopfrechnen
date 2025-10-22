@@ -176,13 +176,13 @@ class SessionStore {
     const now = Date.now();
     const twoHours = 2 * 60 * 60 * 1000;
     
-    for (const [sessionId, session] of this.sessions.entries()) {
+    Array.from(this.sessions.entries()).forEach(([sessionId, session]) => {
       if (now - session.createdAt > twoHours) {
         this.sessions.delete(sessionId);
         this.codeToSessionId.delete(session.code);
         console.log(`🗑️ Session gelöscht: ${sessionId}`);
       }
-    }
+    });
   }
 
   // Hilfsfunktionen
