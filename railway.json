@@ -6,8 +6,7 @@
   "deploy": {
     "numReplicas": 1,
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10,
-    "startCommand": "node server-combined.js"
+    "restartPolicyMaxRetries": 10
   }
 }
 
