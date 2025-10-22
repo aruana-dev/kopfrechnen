@@ -23,6 +23,22 @@ export default function StudentWaiting() {
         setSession(updatedSession);
 
         if (updatedSession.status === 'finished') {
+          // Berechne Rangliste und setze Stats
+          const rangliste = updatedSession.teilnehmer
+            .map((t: any) => ({
+              id: t.id,
+              name: t.name,
+              punkte: t.antworten.filter((a: any) => a.korrekt).length,
+              gesamtZeit: t.gesamtZeit,
+              durchschnittsZeit: t.durchschnittsZeit,
+            }))
+            .sort((a: any, b: any) => 
+              b.punkte !== a.punkte ? b.punkte - a.punkte : a.gesamtZeit - b.gesamtZeit
+            );
+          
+          useSessionStore.getState().setStats({ teilnehmer: rangliste });
+          console.log('📊 Stats gesetzt, navigiere zu Results');
+          
           // Session ist beendet, zur Ergebnis-Seite
           router.push('/results');
         }
