@@ -86,64 +86,6 @@ export default function StudentQuiz() {
     console.log('🔄 Neue Aufgabe:', currentAufgabeIndex + 1, 'Startzeit gesetzt');
   }, [currentAufgabeIndex]);
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleSessionFinished = async ({ rangliste, sessionId, aufgaben }: any) => {
-      console.log('Schüler: Session beendet Event empfangen, Rangliste:', rangliste);
-      
-      // Stats im Store setzen
-      useSessionStore.getState().setStats({ teilnehmer: rangliste });
-      
-      // Wenn Schüler eingeloggt ist, speichere die Session
-      const { schueler } = useServerAuthStore.getState();
-      if (schueler && sessionId) {
-        console.log('💾 Speichere Multiplayer-Session für:', schueler.nickname);
-        
-        // Finde meine Daten in der Rangliste
-        const meinErgebnis = rangliste.find((r: any) => r.name === (schueler.nickname || schueler.vorname));
-        
-        if (meinErgebnis) {
-          try {
-            // Baue Antworten-Array auf (aus Session-Store)
-            const teilnehmer = session?.teilnehmer.find((t: any) => t.name === (schueler.nickname || schueler.vorname));
-            
-            const response = await fetch('/api/sessions/save', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                sessionId,
-                schuelerCode: schueler.code,
-                nickname: schueler.nickname || schueler.vorname,
-                punkte: meinErgebnis.punkte,
-                gesamtZeit: meinErgebnis.gesamtZeit,
-                durchschnittsZeit: meinErgebnis.durchschnittsZeit,
-                antworten: teilnehmer?.antworten || [],
-                aufgaben: aufgaben || session?.aufgaben || []
-              })
-            });
-            
-            if (response.ok) {
-              console.log('✅ Multiplayer-Session gespeichert');
-            } else {
-              console.log('❌ Fehler beim Speichern:', await response.text());
-            }
-          } catch (error) {
-            console.error('❌ Fehler beim Speichern:', error);
-          }
-        }
-      }
-      
-      router.push('/results');
-    };
-
-    socket.on('session-finished', handleSessionFinished);
-
-    return () => {
-      socket.off('session-finished', handleSessionFinished);
-    };
-  }, [socket, router, session]);
-
   const handleNumberClick = (num: string) => {
     if (num === 'C') {
       setAntwort('');
