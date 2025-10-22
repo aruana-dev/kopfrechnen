@@ -1,10 +1,43 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 
 export default function Home() {
   const router = useRouter();
+  const { schueler, lehrer } = useServerAuthStore();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    // Prüfe ob bereits eingeloggt
+    if (schueler) {
+      console.log('🎓 Schüler bereits eingeloggt, weiterleitung zum Dashboard');
+      router.push('/student/dashboard');
+      return;
+    }
+    
+    if (lehrer) {
+      console.log('👨‍🏫 Lehrer bereits eingeloggt, weiterleitung zum Dashboard');
+      router.push('/teacher/dashboard');
+      return;
+    }
+    
+    setIsChecking(false);
+  }, [schueler, lehrer, router]);
+
+  // Zeige Ladebildschirm während der Prüfung
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 via-secondary-500 to-primary-600">
+        <div className="text-center">
+          <div className="text-6xl mb-4 animate-bounce">🧮</div>
+          <p className="text-xl text-white">Lädt...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 relative bg-gradient-to-br from-primary-500 via-secondary-500 to-primary-600 text-white">

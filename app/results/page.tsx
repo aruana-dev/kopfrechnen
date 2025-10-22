@@ -10,7 +10,7 @@ import { useSound } from '@/hooks/useSound';
 export default function Results() {
   const router = useRouter();
   const { stats, previousStats, role, reset, setPreviousStats, resetForRevanche, session, setSession, setRole, setTeilnehmerId, teilnehmerId } = useSessionStore();
-  const { playSound } = useSound(role === 'teacher');
+  const { playSound } = useSound(role === 'teacher', role || 'teacher');
   const [revancheCode, setRevancheCode] = useState<string | null>(null);
   const [isCreatingRevanche, setIsCreatingRevanche] = useState(false);
 

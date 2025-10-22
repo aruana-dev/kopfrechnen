@@ -8,7 +8,7 @@ interface SoundHook {
   toggleMute: () => void;
 }
 
-export function useSound(enabled: boolean = true): SoundHook {
+export function useSound(enabled: boolean = true, role: 'teacher' | 'student' = 'teacher'): SoundHook {
   const [isMuted, setIsMuted] = useState(false);
   const audioCache = useRef<Map<string, HTMLAudioElement>>(new Map());
   const backgroundMusic = useRef<HTMLAudioElement | null>(null);
@@ -31,7 +31,7 @@ export function useSound(enabled: boolean = true): SoundHook {
   }, []);
 
   const playSound = async (soundName: string) => {
-    if (!enabled || isMuted) return;
+    if (!enabled || isMuted || role !== 'teacher') return;
 
     try {
       // Prüfe ob Sound existiert
@@ -58,7 +58,7 @@ export function useSound(enabled: boolean = true): SoundHook {
   };
 
   const playBackgroundMusic = async () => {
-    if (!enabled || isMuted) return;
+    if (!enabled || isMuted || role !== 'teacher') return;
 
     try {
       // Prüfe ob Sound existiert

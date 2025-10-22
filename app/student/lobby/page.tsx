@@ -11,7 +11,7 @@ export default function StudentLobby() {
   const router = useRouter();
   const { session, setSession, setStartzeit } = useSessionStore();
   const [countdown, setCountdown] = useState<number | null>(null);
-  const { playSound, playBackgroundMusic, stopBackgroundMusic } = useSound(true);
+  const { playSound, playBackgroundMusic, stopBackgroundMusic } = useSound(true, 'student');
 
   useEffect(() => {
     playBackgroundMusic();
