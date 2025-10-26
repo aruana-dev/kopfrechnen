@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useSessionStore } from '@/store/useSessionStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 import { sessionAPI } from '@/hooks/usePolling';
 import { useSound } from '@/hooks/useSound';
 
 export default function Results() {
   const router = useRouter();
   const { stats, previousStats, role, reset, setPreviousStats, resetForRevanche, session, setSession, setRole, setTeilnehmerId, teilnehmerId } = useSessionStore();
+  const { schueler } = useServerAuthStore();
   const { playSound } = useSound(role === 'teacher', role || 'teacher');
   const [revancheCode, setRevancheCode] = useState<string | null>(null);
   const [isCreatingRevanche, setIsCreatingRevanche] = useState(false);
@@ -107,7 +109,8 @@ export default function Results() {
           const revancheSession = await sessionAPI.getSessionByCode(updatedSession.revancheCode);
           
           if (revancheSession) {
-            const result = await sessionAPI.joinSession(revancheSession.id, meinName);
+            const schuelerCode = schueler?.code;
+            const result = await sessionAPI.joinSession(revancheSession.id, meinName, schuelerCode);
             
             if (result) {
               console.log('✅ Schüler: Auto-Join zur Revanche erfolgreich');

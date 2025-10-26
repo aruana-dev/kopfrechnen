@@ -8,6 +8,7 @@ import { nanoid } from 'nanoid';
 export interface SessionTeilnehmer {
   id: string;
   name: string;
+  schuelerCode?: string; // Für Speicherung in JSONBin
   antworten: Array<{
     aufgabeId: string;
     antwort: number;
@@ -77,7 +78,7 @@ class SessionStore {
   }
 
   // Teilnehmer hinzufügen
-  addTeilnehmer(sessionId: string, name: string): { success: boolean; teilnehmer?: SessionTeilnehmer; session?: Session } {
+  addTeilnehmer(sessionId: string, name: string, schuelerCode?: string): { success: boolean; teilnehmer?: SessionTeilnehmer; session?: Session } {
     const session = this.sessions.get(sessionId);
     if (!session) {
       return { success: false };
@@ -90,13 +91,14 @@ class SessionStore {
     const teilnehmer: SessionTeilnehmer = {
       id: nanoid(),
       name,
+      schuelerCode, // Speichere Schüler-Code für spätere Persistierung
       antworten: [],
       gesamtZeit: 0,
       durchschnittsZeit: 0,
     };
     
     session.teilnehmer.push(teilnehmer);
-    console.log(`✅ Teilnehmer hinzugefügt: ${name} zu Session ${sessionId}`);
+    console.log(`✅ Teilnehmer hinzugefügt: ${name} (Code: ${schuelerCode || 'N/A'}) zu Session ${sessionId}`);
     
     return { success: true, teilnehmer, session };
   }

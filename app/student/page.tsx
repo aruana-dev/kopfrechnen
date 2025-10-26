@@ -5,10 +5,12 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { sessionAPI } from '@/hooks/usePolling';
 import { useSessionStore } from '@/store/useSessionStore';
+import { useServerAuthStore } from '@/store/useServerAuthStore';
 
 export default function StudentPage() {
   const router = useRouter();
   const { setSession, setRole, setTeilnehmerId } = useSessionStore();
+  const { schueler } = useServerAuthStore();
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -33,8 +35,10 @@ export default function StudentPage() {
         return;
       }
 
-      // Trete Session bei
-      const result = await sessionAPI.joinSession(session.id, name);
+      // Trete Session bei (mit Schüler-Code falls vorhanden)
+      const schuelerCode = schueler?.code;
+      console.log('👤 Trete bei mit Code:', schuelerCode || 'N/A');
+      const result = await sessionAPI.joinSession(session.id, name, schuelerCode);
       
       if (result) {
         console.log('✅ Erfolgreich beigetreten!', result);

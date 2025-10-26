@@ -9,7 +9,7 @@ export async function POST(
 ) {
   try {
     const { id } = params;
-    const { name } = await request.json();
+    const { name, schuelerCode } = await request.json();
     
     if (!name) {
       return NextResponse.json(
@@ -18,7 +18,8 @@ export async function POST(
       );
     }
 
-    const result = sessionStore.addTeilnehmer(id, name);
+    console.log('👤 Teilnehmer tritt bei:', name, 'Code:', schuelerCode || 'N/A');
+    const result = sessionStore.addTeilnehmer(id, name, schuelerCode);
     
     if (!result.success) {
       return NextResponse.json(

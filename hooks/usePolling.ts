@@ -105,12 +105,12 @@ export const sessionAPI = {
   },
 
   // Session beitreten
-  async joinSession(sessionId: string, name: string): Promise<{ teilnehmer: any; session: any } | null> {
+  async joinSession(sessionId: string, name: string, schuelerCode?: string): Promise<{ teilnehmer: any; session: any } | null> {
     try {
       const response = await fetch(`/api/session/${sessionId}/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, schuelerCode }),
       });
       
       if (response.ok) {

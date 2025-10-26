@@ -6,6 +6,49 @@ import { useRouter } from 'next/navigation';
 import { sessionAPI } from '@/hooks/usePolling';
 import { useSessionStore } from '@/store/useSessionStore';
 
+// Speichere Multiplayer-Ergebnisse für alle Teilnehmer
+const saveMultiplayerResults = async (session: any) => {
+  try {
+    // Speichere für jeden Teilnehmer mit Schüler-Code
+    for (const teilnehmer of session.teilnehmer) {
+      // Prüfe ob Teilnehmer einen Schüler-Code hat (nicht "self" im Solo-Modus)
+      if (!teilnehmer.schuelerCode || teilnehmer.id === 'self') {
+        console.log('⏭️ Überspringe Teilnehmer ohne Schüler-Code:', teilnehmer.name);
+        continue;
+      }
+
+      const punkte = teilnehmer.antworten.filter((a: any) => a.korrekt).length;
+      
+      console.log('💾 Speichere Ergebnis für:', teilnehmer.name, '(Code:', teilnehmer.schuelerCode, ')');
+      
+      const response = await fetch('/api/sessions/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: session.id,
+          schuelerCode: teilnehmer.schuelerCode,
+          nickname: teilnehmer.name,
+          punkte,
+          gesamtZeit: teilnehmer.gesamtZeit,
+          durchschnittsZeit: teilnehmer.durchschnittsZeit,
+          antworten: teilnehmer.antworten,
+          aufgaben: session.aufgaben
+        })
+      });
+      
+      if (response.ok) {
+        console.log('✅ Ergebnis gespeichert für:', teilnehmer.name);
+      } else {
+        console.error('❌ Fehler beim Speichern für:', teilnehmer.name, await response.text());
+      }
+    }
+    
+    console.log('✅ Alle Multiplayer-Ergebnisse gespeichert!');
+  } catch (error) {
+    console.error('❌ Fehler beim Speichern der Multiplayer-Ergebnisse:', error);
+  }
+};
+
 export default function TeacherSession() {
   const router = useRouter();
   const { session, stats, setStats, setSession } = useSessionStore();
@@ -41,6 +84,11 @@ export default function TeacherSession() {
               .map((t: any, index: number) => ({ ...t, rang: index + 1 }));
             
             setStats({ teilnehmer: rangliste });
+            
+            // Speichere Multiplayer-Session-Ergebnisse in JSONBin
+            console.log('💾 Speichere Multiplayer-Session-Ergebnisse...');
+            await saveMultiplayerResults(updatedSession);
+            
             router.push('/results');
           }
         }
