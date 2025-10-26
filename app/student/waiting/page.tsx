@@ -17,18 +17,22 @@ export default function StudentWaiting() {
   const [isJumping, setIsJumping] = useState(false);
   const [numbers, setNumbers] = useState<Array<{ id: number; x: number; y: number; value: number; isCorrect: boolean }>>([]);
   const [targetSeries, setTargetSeries] = useState<number[]>([]);
+  const [targetReihe, setTargetReihe] = useState<number>(0);
+  const [showFeedback, setShowFeedback] = useState<'correct' | 'wrong' | null>(null);
+  const [shake, setShake] = useState(false);
 
-  // Generiere Ziel-Reihe aus den Session-Settings
+  // Generiere Ziel-Reihe aus den Session-Settings (NUR EINMAL!)
   useEffect(() => {
-    if (session?.settings?.reihen && session.settings.reihen.length > 0) {
-      // Wähle eine zufällige Reihe
+    if (session?.settings?.reihen && session.settings.reihen.length > 0 && targetSeries.length === 0) {
+      // Wähle eine zufällige Reihe (bleibt für die gesamte Session gleich)
       const randomReihe = session.settings.reihen[Math.floor(Math.random() * session.settings.reihen.length)];
-      // Generiere die ersten 10 Zahlen der Reihe
-      const series = Array.from({ length: 10 }, (_, i) => (i + 1) * randomReihe);
+      setTargetReihe(randomReihe);
+      // Generiere die ersten 15 Zahlen der Reihe
+      const series = Array.from({ length: 15 }, (_, i) => (i + 1) * randomReihe);
       setTargetSeries(series);
       console.log('🎯 Ziel-Reihe:', randomReihe, 'er Reihe');
     }
-  }, [session]);
+  }, [session, targetSeries.length]);
 
   // Polling für Session-Updates
   useEffect(() => {
@@ -141,13 +145,25 @@ export default function StudentWaiting() {
         // Spieler ist bei x=100, prüfe ob Zahl in der Nähe ist
         if (num.x >= 80 && num.x <= 120 && Math.abs(num.y - playerY) < 50) {
           if (num.isCorrect) {
-            // Richtige Zahl gefangen!
+            // Richtige Zahl gefangen! +1 Punkt
             setScore(prev => prev + 1);
             setNumbers(prev => prev.filter(n => n.id !== num.id));
+            
+            // Zeige grünes Häkchen
+            setShowFeedback('correct');
+            setTimeout(() => setShowFeedback(null), 500);
           } else {
-            // Falsche Zahl gefangen - Game Over
-            setScore(0);
-            setNumbers([]);
+            // Falsche Zahl gefangen! -1 Punkt (aber nicht unter 0)
+            setScore(prev => Math.max(0, prev - 1));
+            setNumbers(prev => prev.filter(n => n.id !== num.id));
+            
+            // Zeige rotes X und schüttle Screen
+            setShowFeedback('wrong');
+            setShake(true);
+            setTimeout(() => {
+              setShowFeedback(null);
+              setShake(false);
+            }, 500);
           }
         }
       });
@@ -195,18 +211,22 @@ export default function StudentWaiting() {
         </p>
         
         {/* Mini-Game Anleitung */}
-        {targetSeries.length > 0 && (
+        {targetReihe > 0 && (
           <div className="kahoot-card inline-block mb-4">
             <p className="text-lg font-bold">🎮 The Series Catcher</p>
-            <p className="text-sm">Fange nur Zahlen aus der {targetSeries[1] / 1}-er Reihe!</p>
-            <p className="text-xs mt-2">Drücke LEERTASTE zum Springen</p>
-            <p className="text-2xl font-bold mt-2">Punkte: {score}</p>
+            <p className="text-6xl font-bold my-4 text-kahoot-blue">{targetReihe}er Reihe</p>
+            <p className="text-sm">Fange nur Zahlen aus dieser Reihe!</p>
+            <p className="text-xs mt-2 opacity-70">Drücke LEERTASTE zum Springen</p>
+            <div className="mt-4 pt-4 border-t border-white/20">
+              <p className="text-sm opacity-70">Deine Punkte:</p>
+              <p className="text-4xl font-bold text-kahoot-green">{score}</p>
+            </div>
           </div>
         )}
       </motion.div>
 
       {/* Mini-Game Canvas */}
-      <div className="relative w-full max-w-4xl h-96 bg-gradient-to-b from-blue-400 to-green-400 rounded-2xl overflow-hidden border-4 border-white/30 shadow-2xl">
+      <div className={`relative w-full max-w-4xl h-96 bg-gradient-to-b from-blue-400 to-green-400 rounded-2xl overflow-hidden border-4 border-white/30 shadow-2xl transition-transform ${shake ? 'animate-shake' : ''}`}>
         {/* Boden */}
         <div className="absolute bottom-0 w-full h-20 bg-amber-800" />
         
@@ -245,13 +265,37 @@ export default function StudentWaiting() {
           </motion.div>
         ))}
 
-        {/* Reihen-Anzeige im Spiel */}
-        {targetSeries.length > 0 && (
-          <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-            <p className="text-sm font-bold text-white">
-              {targetSeries.slice(0, 5).join(', ')}...
+        {/* Reihen-Anzeige im Spiel - GROß */}
+        {targetReihe > 0 && (
+          <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-6 py-4 rounded-xl shadow-2xl border-4 border-kahoot-blue">
+            <p className="text-xs font-bold text-gray-600 mb-1">ZIEL-REIHE</p>
+            <p className="text-5xl font-black text-kahoot-blue">
+              {targetReihe}er
             </p>
           </div>
+        )}
+        
+        {/* Feedback Overlay */}
+        {showFeedback === 'correct' && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          >
+            <div className="text-9xl drop-shadow-2xl">✅</div>
+          </motion.div>
+        )}
+        
+        {showFeedback === 'wrong' && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          >
+            <div className="text-9xl drop-shadow-2xl">❌</div>
+          </motion.div>
         )}
       </div>
 

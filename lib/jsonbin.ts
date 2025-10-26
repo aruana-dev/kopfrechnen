@@ -176,36 +176,57 @@ class JSONBinClient {
   async registerTeacher(username: string, password: string): Promise<Teacher> {
     console.log('📝 JSONBin: Registriere Lehrer:', username);
     
-    const passwordHash = await this.hashPassword(password);
-    const teacher: Teacher = {
-      id: `teacher_${Date.now()}`,
-      username,
-      passwordHash,
-      created: Date.now(),
-      klassen: [],
-    };
+    try {
+      const passwordHash = await this.hashPassword(password);
+      const teacher: Teacher = {
+        id: `teacher_${Date.now()}`,
+        username,
+        passwordHash,
+        created: Date.now(),
+        klassen: [],
+      };
 
-    const { id } = await this.createBin(teacher, `teacher_${username}`);
-    console.log('✅ JSONBin: Lehrer-Bin erstellt:', id);
-    
-    // Speichere Lehrer in Index-Bin
-    const indexBinId = await this.getOrCreateIndexBin();
-    const indexBin = await this.readBin(indexBinId);
-    if (!indexBin.teachers) {
-      indexBin.teachers = {};
+      const { id } = await this.createBin(teacher, `teacher_${username}`);
+      console.log('✅ JSONBin: Lehrer-Bin erstellt:', id);
+      
+      // Speichere Lehrer in Index-Bin (mit Fehlerbehandlung)
+      try {
+        const indexBinId = await this.getOrCreateIndexBin();
+        const indexBin = await this.readBin(indexBinId);
+        
+        // Stelle sicher, dass indexBin ein Objekt ist
+        const safeIndexBin = indexBin && typeof indexBin === 'object' ? indexBin : {
+          type: 'kopfrechnen_index',
+          teachers: {},
+          schuelerCodes: {},
+          created: Date.now(),
+          version: '2.0'
+        };
+        
+        if (!safeIndexBin.teachers) {
+          safeIndexBin.teachers = {};
+        }
+        safeIndexBin.teachers[username] = id;
+        
+        await this.updateBin(indexBinId, safeIndexBin);
+        console.log('✅ JSONBin: Lehrer in Index-Bin gespeichert');
+      } catch (indexError) {
+        console.error('⚠️ Fehler beim Speichern in Index-Bin:', indexError);
+        console.log('⚠️ Lehrer wurde trotzdem erstellt, Index-Bin wird beim nächsten Login repariert');
+      }
+      
+      // Auch im localStorage speichern für Kompatibilität (optional)
+      if (typeof window !== 'undefined') {
+        const teacherMap = JSON.parse(localStorage.getItem('teacherBins') || '{}');
+        teacherMap[username] = id;
+        localStorage.setItem('teacherBins', JSON.stringify(teacherMap));
+      }
+      
+      return { ...teacher, id };
+    } catch (error) {
+      console.error('❌ Fehler bei Lehrer-Registrierung:', error);
+      throw error;
     }
-    indexBin.teachers[username] = id;
-    await this.updateBin(indexBinId, indexBin);
-    console.log('✅ JSONBin: Lehrer in Index-Bin gespeichert');
-    
-    // Auch im localStorage speichern für Kompatibilität (optional)
-    if (typeof window !== 'undefined') {
-      const teacherMap = JSON.parse(localStorage.getItem('teacherBins') || '{}');
-      teacherMap[username] = id;
-      localStorage.setItem('teacherBins', JSON.stringify(teacherMap));
-    }
-    
-    return { ...teacher, id };
   }
 
   // Lehrer einloggen
@@ -550,12 +571,24 @@ class JSONBinClient {
       const indexBinId = await this.getOrCreateIndexBin();
       const indexBin = await this.readBin(indexBinId);
       
-      const exists = !!(indexBin.teachers && indexBin.teachers[username]);
+      // Robuste Prüfung
+      if (!indexBin || typeof indexBin !== 'object') {
+        console.log('⚠️ Index-Bin ist leer oder ungültig, Benutzername ist verfügbar');
+        return false;
+      }
+      
+      if (!indexBin.teachers || typeof indexBin.teachers !== 'object') {
+        console.log('⚠️ Index-Bin hat keine Teachers, Benutzername ist verfügbar');
+        return false;
+      }
+      
+      const exists = !!indexBin.teachers[username];
       console.log('🔍 JSONBin: Username existiert:', exists);
       
       return exists;
     } catch (error) {
       console.error('❌ JSONBin: Fehler beim Prüfen des Benutzernamens:', error);
+      // Bei Fehler: Benutzername als verfügbar markieren (Registrierung erlauben)
       return false;
     }
   }
