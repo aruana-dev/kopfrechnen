@@ -7,11 +7,12 @@ const JSONBIN_API_KEY = rawKey.trim();
 const JSONBIN_BASE_URL = 'https://api.jsonbin.io/v3';
 
 // Zentrale Index-Bin-ID für Code-Mappings
-// Wird automatisch beim ersten Aufruf erstellt und wiederverwendet
+// WICHTIG: Setze JSONBIN_INDEX_BIN_ID als Umgebungsvariable auf Railway!
 const INDEX_BIN_ID_KEY = 'kopfrechnen_index_bin_id';
+const ENV_INDEX_BIN_ID = process.env.JSONBIN_INDEX_BIN_ID || null;
 
 // In-Memory Cache für die Index-Bin-ID (läuft auf Railway im selben Prozess)
-let cachedIndexBinId: string | null = null;
+let cachedIndexBinId: string | null = ENV_INDEX_BIN_ID;
 
 // Lock-Mechanismus um Race Conditions zu vermeiden
 let indexBinInitPromise: Promise<string> | null = null;
@@ -145,20 +146,42 @@ class JSONBinClient {
   // Alle Bins auflisten
   async listBins(): Promise<any[]> {
     try {
+      console.log('📋 Rufe listBins() auf...');
       const response = await fetch(`${JSONBIN_BASE_URL}/b`, {
         headers: this.getHeaders(),
       });
 
+      console.log('📋 listBins Response Status:', response.status);
+      
       if (!response.ok) {
-        console.error('ListBins Error:', response.status, response.statusText);
+        console.error('❌ ListBins Error:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('❌ ListBins Error Body:', errorText);
         return [];
       }
 
       const result = await response.json();
-      console.log('ListBins Result:', result);
-      return result || [];
+      console.log('📋 ListBins Result Type:', typeof result);
+      console.log('📋 ListBins Result:', JSON.stringify(result).substring(0, 500));
+      
+      // JSONBin API gibt manchmal ein Objekt mit einem 'record' Array zurück
+      if (result && typeof result === 'object') {
+        if (Array.isArray(result)) {
+          console.log('📋 ListBins: Array mit', result.length, 'BINs');
+          return result;
+        } else if (result.record && Array.isArray(result.record)) {
+          console.log('📋 ListBins: Objekt mit record Array, Länge:', result.record.length);
+          return result.record;
+        } else {
+          console.log('📋 ListBins: Unbekanntes Format, Keys:', Object.keys(result));
+          return [];
+        }
+      }
+      
+      console.log('📋 ListBins: Leere Antwort');
+      return [];
     } catch (error) {
-      console.error('ListBins Exception:', error);
+      console.error('❌ ListBins Exception:', error);
       return [];
     }
   }
@@ -310,7 +333,14 @@ class JSONBinClient {
 
   // Hole oder erstelle Index-Bin
   private async getOrCreateIndexBin(): Promise<string> {
-    // 1. Prüfe In-Memory Cache (Server-Side auf Railway)
+    // 1. Prüfe Umgebungsvariable (BESTE Lösung für Railway!)
+    if (ENV_INDEX_BIN_ID) {
+      console.log('🌍 Verwende Index-Bin-ID aus Umgebungsvariable:', ENV_INDEX_BIN_ID);
+      cachedIndexBinId = ENV_INDEX_BIN_ID;
+      return ENV_INDEX_BIN_ID;
+    }
+    
+    // 2. Prüfe In-Memory Cache (Server-Side auf Railway)
     if (cachedIndexBinId) {
       console.log('⚡ Verwende gecachte Index-Bin-ID:', cachedIndexBinId);
       return cachedIndexBinId;
@@ -454,7 +484,13 @@ class JSONBinClient {
 
     console.log('✅ Neuer Index-Bin erstellt:', id);
     console.log('💾 ID wird automatisch im Server-Cache gespeichert');
-    console.log('💡 Tipp: Lösche alte Index-BINs manuell in JSONBin.io');
+    console.log('');
+    console.log('🚨 WICHTIG: Setze diese ID als Umgebungsvariable auf Railway:');
+    console.log('   Variable: JSONBIN_INDEX_BIN_ID');
+    console.log('   Wert: ' + id);
+    console.log('');
+    console.log('💡 Dann wird diese Index-BIN immer wiederverwendet!');
+    console.log('💡 Alte Index-BINs können dann manuell in JSONBin.io gelöscht werden.');
 
     return id;
   }
