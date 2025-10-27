@@ -43,8 +43,8 @@ export async function POST(request: NextRequest) {
 
     // Extrahiere Settings aus Aufgaben falls nicht direkt übergeben
     const sessionSettings = settings || (aufgaben && aufgaben.length > 0 ? {
-      operationen: [...new Set(aufgaben.map((a: any) => a.operation))],
-      reihen: [...new Set(aufgaben.map((a: any) => a.reihe).filter((r: any) => r))],
+      operationen: Array.from(new Set(aufgaben.map((a: any) => a.operation))),
+      reihen: Array.from(new Set(aufgaben.map((a: any) => a.reihe).filter((r: any) => r))),
       anzahlAufgaben: aufgaben.length,
       tempo: { vorgegeben: false, sekunden: 0 },
       direktWeiter: false,
