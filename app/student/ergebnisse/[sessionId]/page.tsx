@@ -160,7 +160,7 @@ export default function StudentSessionDetailPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-kahoot-blue">
-                {session.settings.anzahlAufgaben}
+                {session.settings?.anzahlAufgaben || gesamt}
               </div>
               <div className="text-sm opacity-70">Aufgaben</div>
             </div>
@@ -184,22 +184,30 @@ export default function StudentSessionDetailPage() {
             </div>
           </div>
           
-          <div className="mt-4 pt-4 border-t border-white/20">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-              <div>
-                <strong>Operationen:</strong> {session.settings.operationen.map(getOperationName).join(', ')}
-              </div>
-              <div>
-                <strong>Reihen:</strong> {session.settings.reihen.join(', ')}
-              </div>
-              <div>
-                <strong>Stellen:</strong> {session.settings.anzahlStellen}
-              </div>
-              <div>
-                <strong>Kommastellen:</strong> {session.settings.mitKommastellen ? 'Ja' : 'Nein'}
+          {session.settings && (
+            <div className="mt-4 pt-4 border-t border-white/20">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {session.settings.operationen && session.settings.operationen.length > 0 && (
+                  <div>
+                    <strong>Operationen:</strong> {session.settings.operationen.map(getOperationName).join(', ')}
+                  </div>
+                )}
+                {session.settings.reihen && session.settings.reihen.length > 0 && (
+                  <div>
+                    <strong>Reihen:</strong> {session.settings.reihen.join(', ')}
+                  </div>
+                )}
+                {session.settings.anzahlStellen && (
+                  <div>
+                    <strong>Stellen:</strong> {session.settings.anzahlStellen}
+                  </div>
+                )}
+                <div>
+                  <strong>Kommastellen:</strong> {session.settings.mitKommastellen ? 'Ja' : 'Nein'}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Aufgaben */}

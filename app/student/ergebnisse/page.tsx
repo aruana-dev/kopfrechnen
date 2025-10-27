@@ -213,12 +213,17 @@ export default function StudentErgebnissePage() {
                           <div className="text-2xl">
                             {new Date(session.datum).toLocaleDateString('de-DE')}
                           </div>
-                          <div className="text-sm opacity-70">
-                            {session.settings.operationen.map(getOperationName).join(', ')}
-                          </div>
+                          {session.settings?.operationen && session.settings.operationen.length > 0 && (
+                            <div className="text-sm opacity-70">
+                              {session.settings.operationen.map(getOperationName).join(', ')}
+                            </div>
+                          )}
                         </div>
                         <div className="text-sm opacity-70 mb-2">
-                          {session.settings.anzahlAufgaben} Aufgaben • {session.settings.reihen.join(', ')}er-Reihen
+                          {session.settings?.anzahlAufgaben || gesamt} Aufgaben
+                          {session.settings?.reihen && session.settings.reihen.length > 0 && (
+                            <> • {session.settings.reihen.join(', ')}er-Reihen</>
+                          )}
                         </div>
                         <div className="flex items-center gap-4 text-sm">
                           <div className="flex items-center gap-1">
