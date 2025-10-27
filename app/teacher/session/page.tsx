@@ -32,7 +32,8 @@ const saveMultiplayerResults = async (session: any) => {
           gesamtZeit: teilnehmer.gesamtZeit,
           durchschnittsZeit: teilnehmer.durchschnittsZeit,
           antworten: teilnehmer.antworten,
-          aufgaben: session.aufgaben
+          aufgaben: session.aufgaben,
+          settings: session.settings // Session-Settings mitschicken!
         })
       });
       

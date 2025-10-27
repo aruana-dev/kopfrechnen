@@ -3,7 +3,9 @@ import { jsonbin } from '@/lib/jsonbin';
 
 export async function POST(request: NextRequest) {
   try {
-    const { sessionId, schuelerCode, nickname, punkte, gesamtZeit, durchschnittsZeit, antworten, aufgaben } = await request.json();
+    const { sessionId, schuelerCode, nickname, punkte, gesamtZeit, durchschnittsZeit, antworten, aufgaben, settings } = await request.json();
+    
+    console.log('💾 Session speichern:', { sessionId, schuelerCode, nickname, hasSettings: !!settings });
     
     if (!sessionId || !schuelerCode || !nickname || antworten === undefined) {
       return NextResponse.json(
@@ -39,11 +41,23 @@ export async function POST(request: NextRequest) {
       };
     });
 
+    // Extrahiere Settings aus Aufgaben falls nicht direkt übergeben
+    const sessionSettings = settings || (aufgaben && aufgaben.length > 0 ? {
+      operationen: [...new Set(aufgaben.map((a: any) => a.operation))],
+      reihen: [...new Set(aufgaben.map((a: any) => a.reihe).filter((r: any) => r))],
+      anzahlAufgaben: aufgaben.length,
+      tempo: { vorgegeben: false, sekunden: 0 },
+      direktWeiter: false,
+      ranglisteAnzeige: 0
+    } : {});
+    
+    console.log('📊 Session Settings:', sessionSettings);
+
     // Erstelle Session-Result
     const sessionResult = {
       sessionId,
       datum: Date.now(),
-      settings: aufgaben?.[0]?.settings || {}, // Fallback für Settings
+      settings: sessionSettings,
       ergebnisse: [{
         schuelerCode,
         nickname,

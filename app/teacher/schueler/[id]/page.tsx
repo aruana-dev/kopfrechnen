@@ -386,7 +386,7 @@ export default function SchuelerProfilPage() {
                               {new Date(session.datum).toLocaleDateString('de-DE')}
                             </div>
                             <div className="text-sm opacity-70">
-                              {session.settings.operationen.join(', ')} • {session.settings.anzahlAufgaben} Aufgaben
+                              {session.settings?.operationen?.join(', ') || 'Gemischt'} • {session.settings?.anzahlAufgaben || ergebnis.antworten.length} Aufgaben
                             </div>
                           </div>
                           <div className="text-right">
