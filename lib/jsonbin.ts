@@ -495,15 +495,6 @@ class JSONBinClient {
     return id;
   }
 
-  // Code-Mapping zum Index hinzufügen
-  private async addCodeMapping(code: string, klasseBinId: string): Promise<void> {
-    const indexBinId = await this.getOrCreateIndexBin();
-    const index = await this.readBin(indexBinId);
-    
-    index.schuelerCodes[code] = klasseBinId;
-    await this.updateBin(indexBinId, index);
-  }
-
   // Klasse für Code finden
   async findKlasseBySchuelerCode(code: string): Promise<{ klasse: Klasse; binId: string } | null> {
     try {
@@ -536,6 +527,7 @@ class JSONBinClient {
     const klasse = await this.readBin(klasseBinId);
     const neueSchueler: Schueler[] = [];
 
+    // Erstelle alle Schüler zuerst (ohne Index-Updates)
     for (let i = 0; i < vornamen.length; i++) {
       const code = this.generateSchuelerCode();
       const schueler: Schueler = {
@@ -546,13 +538,24 @@ class JSONBinClient {
         created: Date.now(),
       };
       neueSchueler.push(schueler);
-      
-      // Füge Code-Mapping zum Index hinzu
-      await this.addCodeMapping(code, klasseBinId);
     }
 
+    // Füge alle Schüler zur Klasse hinzu
     klasse.schueler.push(...neueSchueler);
     await this.updateBin(klasseBinId, klasse);
+
+    // Füge ALLE Code-Mappings auf einmal zum Index hinzu (verhindert Race Conditions!)
+    console.log('📝 Füge', neueSchueler.length, 'Schüler-Codes zum Index hinzu...');
+    const indexBinId = await this.getOrCreateIndexBin();
+    const index = await this.readBin(indexBinId);
+    
+    for (const schueler of neueSchueler) {
+      index.schuelerCodes[schueler.code] = klasseBinId;
+      console.log('  ✅ Code-Mapping hinzugefügt:', schueler.code, '→', klasseBinId);
+    }
+    
+    await this.updateBin(indexBinId, index);
+    console.log('✅ Alle', neueSchueler.length, 'Schüler-Codes im Index gespeichert!');
 
     return neueSchueler;
   }
