@@ -18,19 +18,50 @@ export default function StudentCodePage() {
     }
 
     const codeUpper = schuelerCode.toUpperCase();
-    console.log('Suche Code:', codeUpper);
+    console.log('🔍 Suche Code:', codeUpper);
     
-    // Versuche Code zu validieren (ohne Login)
+    // Setze Loading-State über den Store
+    useServerAuthStore.setState({ isLoading: true, error: null });
+    
+    // Versuche Code zu validieren (mit Timeout)
     try {
-      const response = await fetch(`/api/klasse/validate-code?code=${codeUpper}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 Sekunden Timeout
+      
+      console.log('📤 Sende Validierungs-Request...');
+      const response = await fetch(`/api/klasse/validate-code?code=${codeUpper}`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      console.log('📥 Response Status:', response.status);
       const data = await response.json();
+      console.log('📥 Response Data:', data);
       
       if (data.success) {
+        console.log('✅ Code gültig, wechsle zu Nickname-Eingabe');
+        useServerAuthStore.setState({ isLoading: false, error: null });
         setMode('nickname');
+      } else {
+        console.log('❌ Code ungültig:', data.message);
+        useServerAuthStore.setState({ 
+          isLoading: false, 
+          error: data.message || 'Ungültiger Code' 
+        });
       }
-      // Wenn nicht erfolgreich, bleiben wir im Code-Modus und zeigen Fehler an
-    } catch (err) {
-      console.error('Fehler beim Validieren des Codes:', err);
+    } catch (err: any) {
+      console.error('❌ Fehler beim Validieren des Codes:', err);
+      if (err.name === 'AbortError') {
+        useServerAuthStore.setState({ 
+          isLoading: false, 
+          error: 'Zeitüberschreitung - bitte versuche es erneut' 
+        });
+      } else {
+        useServerAuthStore.setState({ 
+          isLoading: false, 
+          error: 'Netzwerkfehler - bitte versuche es erneut' 
+        });
+      }
     }
   };
 
@@ -98,7 +129,12 @@ export default function StudentCodePage() {
                     isLoading ? 'bg-kahoot-blue/80' : 'bg-kahoot-red/80'
                   }`}
                 >
-                  {isLoading ? 'Lädt...' : error}
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="animate-spin text-2xl">⏳</div>
+                      <span>Suche Code: {schuelerCode}...</span>
+                    </div>
+                  ) : error}
                 </motion.div>
               )}
 
