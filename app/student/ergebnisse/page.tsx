@@ -31,35 +31,52 @@ export default function StudentErgebnissePage() {
   const loadSessions = async () => {
     if (!schueler) return;
     
+    console.log('🔄 [CLIENT] Lade Sessions für Schüler:', schueler.code);
     setLoading(true);
     try {
       // Lade Daten über API Route
       const response = await fetch('/api/schueler/sessions');
+      console.log('📥 [CLIENT] API Response Status:', response.status);
+      
       if (!response.ok) {
+        console.error('❌ [CLIENT] API Error:', response.status, response.statusText);
         router.push('/student/code');
         return;
       }
       
       const data = await response.json();
+      console.log('📦 [CLIENT] Empfangene Daten:', {
+        sessionsAnzahl: data.sessions?.length || 0,
+        schuelerCode: schueler.code
+      });
+      
       const klasse = { sessions: data.sessions };
       
       // Lade alle Sessions für diesen Schüler
       const alleSessions = klasse.sessions || [];
+      console.log('📊 [CLIENT] Alle Sessions in Klasse:', alleSessions.length);
+      
       const schuelerSessions = alleSessions.filter((session: any) => {
         // Prüfe ob ergebnisse existiert und ein Array ist
         if (!session.ergebnisse || !Array.isArray(session.ergebnisse)) {
+          console.log('⚠️ [CLIENT] Session ohne Ergebnisse:', session.sessionId);
           return false;
         }
-        return session.ergebnisse.some((erg: any) => erg.schuelerCode === schueler.code);
+        
+        const hatErgebnis = session.ergebnisse.some((erg: any) => erg.schuelerCode === schueler.code);
+        console.log(hatErgebnis ? '✅' : '❌', '[CLIENT] Session', session.sessionId, '- Codes:', session.ergebnisse.map((e: any) => e.schuelerCode).join(', '));
+        
+        return hatErgebnis;
       });
       
       // Sortiere nach Datum (neueste zuerst)
       schuelerSessions.sort((a: any, b: any) => b.datum - a.datum);
       
+      console.log('✅ [CLIENT] Gefilterte Sessions für Schüler:', schuelerSessions.length);
       setSessions(schuelerSessions);
       
     } catch (error) {
-      console.error('Fehler beim Laden der Sessions:', error);
+      console.error('❌ [CLIENT] Fehler beim Laden der Sessions:', error);
     } finally {
       setLoading(false);
     }

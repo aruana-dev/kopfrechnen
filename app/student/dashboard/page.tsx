@@ -50,12 +50,21 @@ export default function StudentDashboard() {
   const loadMeineDaten = async () => {
     if (!schueler) return;
 
+    console.log('🔄 [DASHBOARD] Lade Daten für Schüler:', schueler.code);
+
     try {
       // Lade Daten über API Route
       const response = await fetch('/api/schueler/sessions');
-      if (!response.ok) return;
+      console.log('📥 [DASHBOARD] Response Status:', response.status);
+      
+      if (!response.ok) {
+        console.error('❌ [DASHBOARD] API Error:', response.status);
+        return;
+      }
       
       const data = await response.json();
+      console.log('📦 [DASHBOARD] Empfangene Sessions:', data.sessions?.length || 0);
+      
       const klasse = { sessions: data.sessions };
       
       // Filtere alle Sessions, in denen dieser Schüler mitgemacht hat
@@ -63,11 +72,13 @@ export default function StudentDashboard() {
         .map((session: any) => {
           // Prüfe ob ergebnisse existiert und ein Array ist
           if (!session.ergebnisse || !Array.isArray(session.ergebnisse)) {
+            console.log('⚠️ [DASHBOARD] Session ohne Ergebnisse:', session.sessionId);
             return null;
           }
           
           const meinErgebnis = session.ergebnisse.find((e: any) => e.schuelerCode === schueler.code);
           if (meinErgebnis) {
+            console.log('✅ [DASHBOARD] Eigenes Ergebnis gefunden in Session:', session.sessionId);
             return {
               ...session,
               meinErgebnis,
@@ -78,6 +89,7 @@ export default function StudentDashboard() {
         .filter((s: any) => s !== null)
         .sort((a: any, b: any) => b.datum - a.datum); // Neueste zuerst
 
+      console.log('✅ [DASHBOARD] Meine Sessions:', sessions.length);
       setMeineSessions(sessions);
 
       // Berechne Statistiken
@@ -85,6 +97,13 @@ export default function StudentDashboard() {
         const totalPunkte = sessions.reduce((sum: number, s: any) => sum + s.meinErgebnis.punkte, 0);
         const totalAufgaben = sessions.reduce((sum: number, s: any) => sum + s.meinErgebnis.antworten.length, 0);
         const besteZeit = Math.min(...sessions.map((s: any) => s.meinErgebnis.durchschnittsZeit));
+
+        console.log('📊 [DASHBOARD] Statistiken:', { 
+          gesamtSessions: sessions.length, 
+          totalPunkte, 
+          totalAufgaben, 
+          besteZeit 
+        });
 
         setStats({
           gesamtSessions: sessions.length,
@@ -94,7 +113,7 @@ export default function StudentDashboard() {
         });
       }
     } catch (error) {
-      console.error('Fehler beim Laden der Daten:', error);
+      console.error('❌ [DASHBOARD] Fehler beim Laden der Daten:', error);
     }
   };
 

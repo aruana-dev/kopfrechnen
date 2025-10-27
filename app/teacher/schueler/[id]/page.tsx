@@ -44,42 +44,59 @@ export default function SchuelerProfilPage() {
   const loadSchuelerData = async () => {
     if (!activeKlasse || !params.id) return;
     
+    console.log('🔄 [LEHRER] Lade Schülerdaten für ID:', params.id);
     setLoading(true);
     try {
       // Lade aktuelle Klassendaten via API
       const response = await fetch(`/api/klasse/${activeKlasse.id}`);
       const data = await response.json();
+      console.log('📥 [LEHRER] Klassen-API Response:', response.status, data.success ? 'Erfolg' : 'Fehler');
 
       if (!response.ok || !data.success) {
-        console.error('Fehler beim Laden:', data.error);
+        console.error('❌ [LEHRER] Fehler beim Laden:', data.error);
         router.push('/teacher/klasse');
         return;
       }
 
       const updatedKlasse = data.klasse;
+      console.log('📦 [LEHRER] Klasse geladen:', updatedKlasse.name, 'Sessions:', (updatedKlasse.sessions || []).length);
       
       // Finde den Schüler
       const schueler = updatedKlasse.schueler?.find((s: any) => s.id === params.id);
       if (!schueler) {
+        console.error('❌ [LEHRER] Schüler nicht gefunden:', params.id);
         router.push('/teacher/klasse');
         return;
       }
       
+      console.log('✅ [LEHRER] Schüler gefunden:', schueler.vorname, 'Code:', schueler.code);
       setSchueler(schueler);
       
       // Lade alle Sessions für diesen Schüler
       const alleSessions = updatedKlasse.sessions || [];
-      const schuelerSessions = alleSessions.filter((session: any) => 
-        session.ergebnisse.some((erg: any) => erg.schuelerCode === schueler.code)
-      );
+      console.log('📊 [LEHRER] Filtere Sessions für Schüler-Code:', schueler.code);
       
+      const schuelerSessions = alleSessions.filter((session: any) => {
+        if (!session.ergebnisse || !Array.isArray(session.ergebnisse)) {
+          console.log('⚠️ [LEHRER] Session ohne Ergebnisse:', session.sessionId);
+          return false;
+        }
+        
+        const hatErgebnis = session.ergebnisse.some((erg: any) => erg.schuelerCode === schueler.code);
+        if (hatErgebnis) {
+          console.log('✅ [LEHRER] Session mit Ergebnis:', session.sessionId, 'Datum:', new Date(session.datum).toLocaleString());
+        }
+        return hatErgebnis;
+      });
+      
+      console.log('✅ [LEHRER] Gefilterte Sessions:', schuelerSessions.length);
       setSessions(schuelerSessions);
       
       // Analysiere die Ergebnisse
       await analyzeSchuelerResults(schuelerSessions, schueler.code);
       
     } catch (error) {
-      console.error('Fehler beim Laden der Schülerdaten:', error);
+      console.error('❌ [LEHRER] Fehler beim Laden der Schülerdaten:', error);
     } finally {
       setLoading(false);
     }

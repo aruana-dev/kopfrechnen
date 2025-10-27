@@ -622,9 +622,31 @@ class JSONBinClient {
 
   // Session-Ergebnis speichern
   async saveSessionResult(klasseBinId: string, result: SessionResult): Promise<void> {
+    console.log('💾 JSONBin.saveSessionResult - START');
+    console.log('   Klasse Bin-ID:', klasseBinId);
+    console.log('   Session-ID:', result.sessionId);
+    console.log('   Ergebnisse:', result.ergebnisse?.length || 0);
+    console.log('   Schüler-Codes:', result.ergebnisse?.map(e => e.schuelerCode).join(', '));
+    
     const klasse = await this.readBin(klasseBinId);
+    
+    if (!klasse) {
+      console.error('❌ Klasse nicht gefunden:', klasseBinId);
+      throw new Error('Klasse nicht gefunden');
+    }
+    
+    console.log('📊 Klasse vor Speichern:', klasse.name, 'Bisherige Sessions:', (klasse.sessions || []).length);
+    
+    if (!klasse.sessions) {
+      console.log('⚠️ Klasse hatte keine Sessions-Array, erstelle neue');
+      klasse.sessions = [];
+    }
+    
     klasse.sessions.push(result);
+    console.log('📊 Klasse nach Hinzufügen:', klasse.name, 'Neue Anzahl Sessions:', klasse.sessions.length);
+    
     await this.updateBin(klasseBinId, klasse);
+    console.log('✅ JSONBin.saveSessionResult - ERFOLG');
   }
 
   // Lehrer-Passwort ändern
