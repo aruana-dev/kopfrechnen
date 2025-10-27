@@ -229,12 +229,14 @@ export default function SchuelerProfilPage() {
       }
     });
 
-    // Zeitanalyse
+    // Zeitanalyse (Zeit ist in Millisekunden)
     const durchschnittsZeit = antworten.reduce((sum, ant) => sum + (ant.zeit || 0), 0) / antworten.length;
-    if (durchschnittsZeit > 10) {
+    const durchschnittsZeitSekunden = durchschnittsZeit / 1000;
+    
+    if (durchschnittsZeitSekunden > 10) {
       schwaechen.push('Langsame Bearbeitung');
       empfehlungen.push('Übung zur Steigerung der Rechengeschwindigkeit');
-    } else if (durchschnittsZeit < 3) {
+    } else if (durchschnittsZeitSekunden < 3) {
       staerken.push('Sehr schnelle Bearbeitung');
     }
 
@@ -326,7 +328,7 @@ export default function SchuelerProfilPage() {
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-kahoot-purple">
-                    {analyse?.durchschnittsZeit ? Math.round(analyse.durchschnittsZeit) : 0}s
+                    {analyse?.durchschnittsZeit ? (analyse.durchschnittsZeit / 1000).toFixed(1) : '0'}s
                   </div>
                   <div className="text-sm opacity-70">Ø Zeit/Aufgabe</div>
                 </div>
@@ -411,7 +413,7 @@ export default function SchuelerProfilPage() {
                               {ergebnis.punkte} Punkte
                             </div>
                             <div className="text-sm opacity-70">
-                              {Math.round(ergebnis.durchschnittsZeit)}s Ø
+                              {(ergebnis.durchschnittsZeit / 1000).toFixed(1)}s Ø
                             </div>
                           </div>
                         </div>

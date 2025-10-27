@@ -146,7 +146,7 @@ export default function SessionDetailPage() {
               📚 Übung vom {new Date(session.datum).toLocaleDateString('de-DE')}
             </h1>
             <p className="text-xl opacity-80">
-              {schueler.vorname} • {ergebnis.punkte} Punkte • {Math.round(ergebnis.durchschnittsZeit)}s Ø
+              {schueler.vorname} • {ergebnis.punkte} Punkte • {(ergebnis.durchschnittsZeit / 1000).toFixed(1)}s Ø
             </p>
           </div>
         </div>
@@ -175,7 +175,7 @@ export default function SessionDetailPage() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-kahoot-purple">
-                {Math.round(ergebnis.gesamtZeit)}s
+                {(ergebnis.gesamtZeit / 1000).toFixed(1)}s
               </div>
               <div className="text-sm opacity-70">Gesamtzeit</div>
             </div>

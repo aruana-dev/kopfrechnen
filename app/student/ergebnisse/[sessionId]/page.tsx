@@ -178,7 +178,7 @@ export default function StudentSessionDetailPage() {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-kahoot-purple">
-                {Math.round(ergebnis.gesamtZeit)}s
+                {(ergebnis.gesamtZeit / 1000).toFixed(1)}s
               </div>
               <div className="text-sm opacity-70">Gesamtzeit</div>
             </div>
