@@ -362,14 +362,39 @@ class JSONBinClient {
     console.log('🔍 Suche nach existierenden Index-Bins...');
     try {
       const bins = await this.listBins();
+      console.log(`📦 Gefundene BINs: ${bins.length}`);
       
-      for (const bin of bins) {
-        if (bin.name && bin.name.includes('kopfrechnen_index')) {
-          console.log('✅ Index-Bin gefunden:', bin.id);
+      // Sammle alle potentiellen Index-BINs
+      const indexBins = bins.filter(bin => 
+        bin.name && bin.name.includes('kopfrechnen_index')
+      );
+      
+      console.log(`🎯 Potentielle Index-BINs gefunden: ${indexBins.length}`);
+      
+      if (indexBins.length > 0) {
+        // Sortiere nach Erstellungsdatum (neueste zuerst)
+        indexBins.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA;
+        });
+        
+        console.log('📋 Index-BINs (sortiert nach Datum):');
+        indexBins.forEach(bin => {
+          console.log(`  - ${bin.id} (${bin.name}) - ${bin.createdAt}`);
+        });
+        
+        // Versuche die neueste Index-BIN zu verwenden
+        for (const bin of indexBins) {
+          console.log(`🔍 Prüfe Index-Bin: ${bin.id}`);
           
           try {
             const index = await this.readBin(bin.id);
-            if (index) {
+            if (index && typeof index === 'object') {
+              console.log(`✅ Index-Bin ${bin.id} ist gültig`);
+              console.log(`   - Teachers: ${Object.keys(index.teachers || {}).length}`);
+              console.log(`   - Schüler-Codes: ${Object.keys(index.schuelerCodes || {}).length}`);
+              
               // Initialisiere fehlende Felder
               let needsUpdate = false;
               if (!index.type) { index.type = 'kopfrechnen_index'; needsUpdate = true; }
@@ -377,6 +402,7 @@ class JSONBinClient {
               if (!index.schuelerCodes) { index.schuelerCodes = {}; needsUpdate = true; }
               
               if (needsUpdate) {
+                console.log('🔧 Aktualisiere Index-Bin mit fehlenden Feldern');
                 await this.updateBin(bin.id, index);
               }
               
@@ -389,20 +415,24 @@ class JSONBinClient {
                 localStorage.setItem(INDEX_BIN_ID_KEY, bin.id);
               }
               
-              console.log('✅ Verwende existierenden Index-Bin');
+              console.log(`✅ Verwende existierenden Index-Bin: ${bin.id}`);
               return bin.id;
             }
           } catch (error) {
-            console.log('⚠️ Index-Bin ungültig:', bin.id);
+            console.log(`⚠️ Index-Bin ${bin.id} ungültig:`, error);
           }
         }
       }
+      
+      console.log('⚠️ Keine gültigen Index-BINs gefunden');
     } catch (error) {
       console.error('❌ Fehler beim Suchen:', error);
     }
 
     // 3. Erstelle neuen Index-Bin (nur wenn wirklich keiner existiert)
-    console.log('➕ Erstelle neuen Index-Bin...');
+    console.log('⚠️ WARNUNG: Erstelle neuen Index-Bin, da keine gültigen gefunden wurden!');
+    console.log('⚠️ Dies sollte nur beim ersten Start passieren.');
+    
     const indexData = {
       type: 'kopfrechnen_index',
       schuelerCodes: {},
@@ -424,6 +454,7 @@ class JSONBinClient {
 
     console.log('✅ Neuer Index-Bin erstellt:', id);
     console.log('💾 ID wird automatisch im Server-Cache gespeichert');
+    console.log('💡 Tipp: Lösche alte Index-BINs manuell in JSONBin.io');
 
     return id;
   }
