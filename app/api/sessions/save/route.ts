@@ -69,7 +69,9 @@ export async function POST(request: NextRequest) {
     };
 
     // Speichere in jsonbin
+    console.log('💾 Speichere in Klasse:', binId, 'für Schüler:', schuelerCode);
     await jsonbin.saveSessionResult(binId, sessionResult);
+    console.log('✅ Session erfolgreich gespeichert:', sessionId);
 
     return NextResponse.json({
       success: true,

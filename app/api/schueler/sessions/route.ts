@@ -27,21 +27,37 @@ export async function GET(request: NextRequest) {
     }
 
     // Lade Klassendaten
+    console.log('📦 Lade Klasse:', sessionData.klasseId, 'für Schüler:', sessionData.schuelerCode);
     const klasse = await jsonbin.readBin(sessionData.klasseId);
     if (!klasse) {
+      console.log('❌ Klasse nicht gefunden:', sessionData.klasseId);
       return NextResponse.json(
         { error: 'Klasse nicht gefunden' },
         { status: 404 }
       );
     }
 
+    console.log('📊 Klasse geladen:', klasse.name, 'Sessions:', (klasse.sessions || []).length);
+
     // Filtere Sessions für diesen Schüler
-    const schuelerSessions = (klasse.sessions || []).filter((session: any) => 
-      session.ergebnisse.some((erg: any) => erg.schuelerCode === sessionData.schuelerCode)
-    );
+    const schuelerSessions = (klasse.sessions || []).filter((session: any) => {
+      // Prüfe ob ergebnisse existiert und ein Array ist
+      if (!session.ergebnisse || !Array.isArray(session.ergebnisse)) {
+        console.log('⚠️ Session ohne Ergebnisse gefunden:', session.sessionId);
+        return false;
+      }
+      
+      const hatErgebnis = session.ergebnisse.some((erg: any) => erg.schuelerCode === sessionData.schuelerCode);
+      if (hatErgebnis) {
+        console.log('✅ Session gefunden für Schüler:', session.sessionId, 'Datum:', new Date(session.datum).toLocaleString());
+      }
+      return hatErgebnis;
+    });
 
     // Sortiere nach Datum (neueste zuerst)
     schuelerSessions.sort((a: any, b: any) => b.datum - a.datum);
+
+    console.log('✅ Gefilterte Sessions für Schüler:', schuelerSessions.length);
 
     return NextResponse.json({
       success: true,
