@@ -40,7 +40,22 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log('✅ Schüler gefunden:', { vorname: schueler.vorname, id: schueler.id });
+    console.log('✅ Schüler gefunden:', { vorname: schueler.vorname, id: schueler.id, altNickname: schueler.nickname });
+    
+    // Wenn der Schüler noch keinen gespeicherten Nickname hat, speichere ihn jetzt
+    if (!schueler.nickname && nickname) {
+      console.log('💾 Speichere neuen Nickname:', nickname);
+      schueler.nickname = nickname;
+      
+      // Aktualisiere die Klasse in JSONBin
+      try {
+        await jsonbin.updateBin(binId, klasse);
+        console.log('✅ Nickname gespeichert');
+      } catch (error) {
+        console.error('❌ Fehler beim Speichern des Nicknames:', error);
+        // Fahre trotzdem fort mit dem Login
+      }
+    }
 
     // Erstelle Session-Token (vereinfacht für Demo)
     const sessionToken = `schueler_${schuelerCode}_${Date.now()}`;

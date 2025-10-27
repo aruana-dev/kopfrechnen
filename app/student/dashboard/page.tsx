@@ -7,7 +7,7 @@ import { useServerAuthStore } from '@/store/useServerAuthStore';
 
 export default function StudentDashboard() {
   const router = useRouter();
-  const { schueler } = useServerAuthStore();
+  const { schueler, updateNickname, isLoading: authLoading } = useServerAuthStore();
   const [meineSessions, setMeineSessions] = useState<any[]>([]);
   const [stats, setStats] = useState({
     gesamtSessions: 0,
@@ -17,6 +17,8 @@ export default function StudentDashboard() {
   });
 
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isEditingNickname, setIsEditingNickname] = useState(false);
+  const [newNickname, setNewNickname] = useState('');
 
   useEffect(() => {
     // Warte auf Client-Side Hydration
@@ -102,6 +104,27 @@ export default function StudentDashboard() {
     router.push('/');
   };
 
+  const handleNicknameEdit = () => {
+    setNewNickname(schueler?.nickname || '');
+    setIsEditingNickname(true);
+  };
+
+  const handleNicknameSave = async () => {
+    if (!newNickname.trim()) {
+      return;
+    }
+
+    const success = await updateNickname(newNickname.trim());
+    if (success) {
+      setIsEditingNickname(false);
+    }
+  };
+
+  const handleNicknameCancel = () => {
+    setIsEditingNickname(false);
+    setNewNickname('');
+  };
+
   if (!schueler) {
     return null;
   }
@@ -110,14 +133,67 @@ export default function StudentDashboard() {
     <div data-role="student" className="min-h-screen p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold">
-              Hallo {schueler.nickname || schueler.vorname}! 👋
-            </h1>
-            <p className="text-lg opacity-80 mt-2">
-              Code: {schueler.code}
-            </p>
+        <div className="flex justify-between items-start mb-8">
+          <div className="flex-1">
+            {isEditingNickname ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="text"
+                    value={newNickname}
+                    onChange={(e) => setNewNickname(e.target.value)}
+                    placeholder="Neuer Nickname"
+                    maxLength={20}
+                    className="px-4 py-2 text-2xl rounded-lg bg-white/20 border-2 border-white/30 focus:border-white/60 outline-none"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleNicknameSave();
+                      if (e.key === 'Escape') handleNicknameCancel();
+                    }}
+                    autoFocus
+                  />
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleNicknameSave}
+                    disabled={!newNickname.trim() || authLoading}
+                    className="px-4 py-2 bg-kahoot-green rounded-lg font-bold disabled:opacity-50"
+                  >
+                    ✓ Speichern
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleNicknameCancel}
+                    className="px-4 py-2 bg-white/20 rounded-lg font-bold"
+                  >
+                    ✗ Abbrechen
+                  </motion.button>
+                </div>
+                <p className="text-sm opacity-70">
+                  Drücke Enter zum Speichern, Escape zum Abbrechen
+                </p>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-4xl md:text-5xl font-bold">
+                    Hallo {schueler.nickname || schueler.vorname}! 👋
+                  </h1>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleNicknameEdit}
+                    className="text-2xl opacity-60 hover:opacity-100 transition-opacity"
+                    title="Nickname ändern"
+                  >
+                    ✏️
+                  </motion.button>
+                </div>
+                <p className="text-lg opacity-80 mt-2">
+                  Code: {schueler.code}
+                </p>
+              </div>
+            )}
           </div>
           <motion.button
             whileHover={{ scale: 1.05 }}

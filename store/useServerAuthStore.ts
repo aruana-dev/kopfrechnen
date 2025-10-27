@@ -31,6 +31,7 @@ interface ServerAuthStore {
   
   // Schüler-Aktionen
   loginSchueler: (schuelerCode: string, nickname: string) => Promise<boolean>;
+  updateNickname: (newNickname: string) => Promise<boolean>;
   loadSchuelerSessions: () => Promise<void>;
   logoutSchueler: () => void;
   
@@ -82,6 +83,59 @@ export const useServerAuthStore = create<ServerAuthStore>()(
             return true;
           } else {
             console.log('❌ Login fehlgeschlagen:', data.error);
+            set({ 
+              error: data.error,
+              isLoading: false
+            });
+            return false;
+          }
+        } catch (error) {
+          console.error('❌ Netzwerk-Fehler:', error);
+          set({ 
+            error: 'Netzwerk-Fehler',
+            isLoading: false
+          });
+          return false;
+        }
+      },
+
+      updateNickname: async (newNickname: string) => {
+        const { schueler } = get();
+        
+        if (!schueler) {
+          set({ error: 'Nicht eingeloggt' });
+          return false;
+        }
+        
+        set({ isLoading: true, error: null });
+        
+        try {
+          console.log('📤 Sende Nickname-Update:', { code: schueler.code, newNickname });
+          
+          const response = await fetch('/api/schueler/update-nickname', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              schuelerCode: schueler.code, 
+              newNickname 
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            console.log('✅ Nickname erfolgreich aktualisiert');
+            set({ 
+              schueler: {
+                ...schueler,
+                nickname: newNickname
+              },
+              isLoading: false,
+              error: null
+            });
+            return true;
+          } else {
+            console.log('❌ Nickname-Update fehlgeschlagen:', data.error);
             set({ 
               error: data.error,
               isLoading: false

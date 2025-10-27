@@ -39,9 +39,21 @@ export default function StudentCodePage() {
       console.log('📥 Response Data:', data);
       
       if (data.success) {
-        console.log('✅ Code gültig, wechsle zu Nickname-Eingabe');
-        useServerAuthStore.setState({ isLoading: false, error: null });
-        setMode('nickname');
+        console.log('✅ Code gültig');
+        
+        // Prüfe ob Schüler bereits einen gespeicherten Nickname hat
+        if (data.klasse?.schueler?.nickname) {
+          console.log('✅ Nickname bereits gespeichert, logge direkt ein:', data.klasse.schueler.nickname);
+          // Direkt einloggen mit gespeichertem Nickname
+          const success = await loginSchueler(codeUpper, data.klasse.schueler.nickname);
+          if (success) {
+            router.push('/student/dashboard');
+          }
+        } else {
+          console.log('ℹ️ Kein Nickname gespeichert, wechsle zu Nickname-Eingabe');
+          useServerAuthStore.setState({ isLoading: false, error: null });
+          setMode('nickname');
+        }
       } else {
         console.log('❌ Code ungültig:', data.message);
         useServerAuthStore.setState({ 

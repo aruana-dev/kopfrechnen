@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.log('✅ Schüler gefunden:', schueler.vorname);
+    console.log('✅ Schüler gefunden:', schueler.vorname, 'Nickname:', schueler.nickname || 'nicht gesetzt');
     return NextResponse.json({
       success: true,
       message: 'Code gültig',
@@ -52,7 +52,8 @@ export async function GET(request: NextRequest) {
         name: klasse.name,
         schueler: {
           vorname: schueler.vorname,
-          code: schueler.code
+          code: schueler.code,
+          nickname: schueler.nickname || null
         }
       }
     });

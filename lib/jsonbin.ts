@@ -52,6 +52,7 @@ export interface Schueler {
   id: string;
   code: string; // Eindeutiger Schüler-Code
   vorname: string; // Nur für Lehrer sichtbar
+  nickname?: string; // Gespeicherter Nickname (optional für Abwärtskompatibilität)
   klasseId: string;
   created: number;
 }
