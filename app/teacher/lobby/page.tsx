@@ -76,7 +76,7 @@ function TeacherLobbyContent() {
           
           if (updatedSession.status === 'countdown') {
             console.log('📢 Countdown gestartet');
-            setCountdown(10);
+            setCountdown(3);
             stopBackgroundMusic();
             playSound('countdown.mp3');
           } else if (updatedSession.status === 'running') {

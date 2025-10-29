@@ -33,7 +33,7 @@ export default function StudentLobby() {
 
         // Status-Änderungen
         if (updatedSession.status === 'countdown' && countdown === null) {
-          setCountdown(10);
+          setCountdown(3);
           stopBackgroundMusic();
           playSound('countdown.mp3');
         } else if (updatedSession.status === 'running') {
