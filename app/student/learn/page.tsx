@@ -17,7 +17,8 @@ export default function StudentLearnPage() {
     reihen: [2, 3, 5],
     operationen: ['multiplikation'],
     anzahlAufgaben: 10,
-    anzahlStellen: 2,
+    stellenLinks: 2,
+    stellenRechts: 2,
     mitKommastellen: false,
     mitMinuswerten: false,
     tempo: {
@@ -195,13 +196,29 @@ export default function StudentLearnPage() {
               </div>
 
               <div>
-                <label className="block mb-2">Anzahl Stellen: {settings.anzahlStellen}</label>
+                <label className="block mb-2">
+                  Stellen Links (1. Zahl): {settings.stellenLinks}
+                </label>
                 <input
                   type="range"
                   min="1"
                   max="6"
-                  value={settings.anzahlStellen}
-                  onChange={(e) => setSettings({ ...settings, anzahlStellen: parseInt(e.target.value) })}
+                  value={settings.stellenLinks}
+                  onChange={(e) => setSettings({ ...settings, stellenLinks: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <label className="block mb-2">
+                  Stellen Rechts (2. Zahl): {settings.stellenRechts}
+                </label>
+                <input
+                  type="range"
+                  min="1"
+                  max="6"
+                  value={settings.stellenRechts}
+                  onChange={(e) => setSettings({ ...settings, stellenRechts: parseInt(e.target.value) })}
                   className="w-full"
                 />
               </div>

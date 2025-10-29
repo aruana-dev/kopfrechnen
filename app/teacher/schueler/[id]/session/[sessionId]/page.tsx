@@ -190,7 +190,10 @@ export default function SessionDetailPage() {
                 <strong>Reihen:</strong> {session.settings.reihen.join(', ')}
               </div>
               <div>
-                <strong>Stellen:</strong> {session.settings.anzahlStellen}
+                <strong>Stellen:</strong>{' '}
+                {session.settings.stellenLinks && session.settings.stellenRechts
+                  ? `${session.settings.stellenLinks} × ${session.settings.stellenRechts}`
+                  : session.settings.anzahlStellen || 'N/A'}
               </div>
               <div>
                 <strong>Kommastellen:</strong> {session.settings.mitKommastellen ? 'Ja' : 'Nein'}

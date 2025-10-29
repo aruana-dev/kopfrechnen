@@ -4,7 +4,9 @@ export interface SessionSettings {
   reihen: number[]; // 1-12
   operationen: Operation[];
   anzahlAufgaben: number;
-  anzahlStellen: number; // 1-6
+  anzahlStellen?: number; // Legacy - für Abwärtskompatibilität
+  stellenLinks: number; // 1-6 - Stellen der linken Zahl
+  stellenRechts: number; // 1-6 - Stellen der rechten Zahl
   mitKommastellen: boolean;
   mitMinuswerten: boolean;
   tempo: {

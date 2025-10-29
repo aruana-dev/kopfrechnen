@@ -19,48 +19,74 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
   let ergebnis: number;
   let reihe: number | undefined;
   
-  const maxWert = Math.pow(10, settings.anzahlStellen) - 1;
-  const minWert = settings.mitMinuswerten ? -maxWert : 0;
+  // Abwärtskompatibilität: Falls anzahlStellen noch verwendet wird
+  const stellenLinks = settings.stellenLinks || settings.anzahlStellen || 2;
+  const stellenRechts = settings.stellenRechts || settings.anzahlStellen || 2;
+  
+  const maxWertLinks = Math.pow(10, stellenLinks) - 1;
+  const minWertLinks = settings.mitMinuswerten ? -maxWertLinks : 0;
+  
+  const maxWertRechts = Math.pow(10, stellenRechts) - 1;
+  const minWertRechts = settings.mitMinuswerten ? -maxWertRechts : 0;
   
   switch (operation) {
     case 'addition':
-      zahl1 = generiereZahl(minWert, maxWert, settings.mitKommastellen);
-      zahl2 = generiereZahl(minWert, maxWert, settings.mitKommastellen);
+      zahl1 = generiereZahl(minWertLinks, maxWertLinks, settings.mitKommastellen);
+      zahl2 = generiereZahl(minWertRechts, maxWertRechts, settings.mitKommastellen);
       ergebnis = runde(zahl1 + zahl2);
       break;
       
     case 'subtraktion':
-      zahl1 = generiereZahl(minWert, maxWert, settings.mitKommastellen);
-      zahl2 = generiereZahl(minWert, maxWert, settings.mitKommastellen);
+      zahl1 = generiereZahl(minWertLinks, maxWertLinks, settings.mitKommastellen);
+      zahl2 = generiereZahl(minWertRechts, maxWertRechts, settings.mitKommastellen);
       ergebnis = runde(zahl1 - zahl2);
       break;
       
     case 'multiplikation':
-      // Bei Multiplikation: Reihe × Faktor (Faktor richtet sich nach Stellen)
-      reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
+      // Bei Multiplikation: zahl1 (links) × zahl2 (rechts)
+      // Wenn Reihen ausgewählt, dann zahl1 = Reihe
+      if (settings.reihen.length > 0) {
+        reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
+        zahl1 = reihe;
+        
+        // zahl2 basierend auf stellenRechts
+        const maxFaktor = Math.pow(10, Math.max(1, stellenRechts));
+        const minFaktor = stellenRechts > 1 ? Math.pow(10, stellenRechts - 1) : 1;
+        zahl2 = Math.floor(Math.random() * (maxFaktor - minFaktor)) + minFaktor;
+      } else {
+        // Keine Reihen: Beide Zahlen nach Stellen generieren
+        zahl1 = generiereZahl(minWertLinks, maxWertLinks, settings.mitKommastellen);
+        zahl2 = generiereZahl(minWertRechts, maxWertRechts, settings.mitKommastellen);
+      }
       
-      // Faktor basierend auf anzahlStellen generieren
-      const maxFaktor = Math.pow(10, Math.max(1, settings.anzahlStellen - 1));
-      const minFaktor = settings.anzahlStellen > 1 ? Math.pow(10, settings.anzahlStellen - 2) : 1;
-      const faktor = Math.floor(Math.random() * (maxFaktor - minFaktor + 1)) + minFaktor;
-      
-      zahl1 = reihe;
-      zahl2 = faktor;
       ergebnis = zahl1 * zahl2;
       break;
       
     case 'division':
-      // Division: Dividend ÷ Reihe = Quotient (Quotient richtet sich nach Stellen)
-      reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
-      
-      // Quotient basierend auf anzahlStellen generieren
-      const maxQuotient = Math.pow(10, Math.max(1, settings.anzahlStellen - 1));
-      const minQuotient = settings.anzahlStellen > 1 ? Math.pow(10, settings.anzahlStellen - 2) : 1;
-      const quotient = Math.floor(Math.random() * (maxQuotient - minQuotient + 1)) + minQuotient;
-      
-      ergebnis = quotient;
-      zahl2 = reihe;
-      zahl1 = reihe * quotient; // Dividend = Divisor × Quotient (damit es aufgeht)
+      // Division: zahl1 (Dividend, links) ÷ zahl2 (Divisor, rechts) = Ergebnis (Quotient)
+      // Wenn Reihen ausgewählt, dann zahl2 = Reihe
+      if (settings.reihen.length > 0) {
+        reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
+        zahl2 = reihe;
+        
+        // Quotient basierend auf stellenLinks generieren
+        const maxQuotient = Math.pow(10, Math.max(1, stellenLinks));
+        const minQuotient = stellenLinks > 1 ? Math.pow(10, stellenLinks - 1) : 1;
+        const quotient = Math.floor(Math.random() * (maxQuotient - minQuotient)) + minQuotient;
+        
+        ergebnis = quotient;
+        zahl1 = reihe * quotient; // Dividend = Divisor × Quotient (damit es aufgeht)
+      } else {
+        // Keine Reihen: Beide Zahlen nach Stellen generieren
+        // zahl1 = Vielfaches von zahl2 (damit Division aufgeht)
+        zahl2 = generiereZahl(Math.max(1, minWertRechts), maxWertRechts, false); // Divisor nie 0
+        const maxQuotient = Math.floor(maxWertLinks / Math.max(1, Math.abs(zahl2)));
+        const minQuotient = 1;
+        const quotient = Math.floor(Math.random() * (maxQuotient - minQuotient + 1)) + minQuotient;
+        
+        ergebnis = quotient;
+        zahl1 = zahl2 * quotient;
+      }
       break;
   }
   
