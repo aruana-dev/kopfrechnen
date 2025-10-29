@@ -49,10 +49,9 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
         reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
         zahl1 = reihe;
         
-        // zahl2 basierend auf stellenRechts
-        const maxFaktor = Math.pow(10, Math.max(1, stellenRechts));
-        const minFaktor = stellenRechts > 1 ? Math.pow(10, stellenRechts - 1) : 1;
-        zahl2 = Math.floor(Math.random() * (maxFaktor - minFaktor)) + minFaktor;
+        // zahl2 basierend auf stellenRechts generieren
+        // Beispiel: 3 Stellen → 100 bis 999
+        zahl2 = generiereZahl(minWertRechts, maxWertRechts, settings.mitKommastellen);
       } else {
         // Keine Reihen: Beide Zahlen nach Stellen generieren
         zahl1 = generiereZahl(minWertLinks, maxWertLinks, settings.mitKommastellen);
@@ -69,10 +68,14 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
         reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
         zahl2 = reihe;
         
-        // Quotient basierend auf stellenLinks generieren
-        const maxQuotient = Math.pow(10, Math.max(1, stellenLinks));
-        const minQuotient = stellenLinks > 1 ? Math.pow(10, stellenLinks - 1) : 1;
-        const quotient = Math.floor(Math.random() * (maxQuotient - minQuotient)) + minQuotient;
+        // Ergebnis (Quotient) basierend auf stellenLinks generieren
+        // Beispiel: 5 Stellen links → Ergebnis 10000 bis 99999
+        // Dann: Dividend = Divisor × Quotient
+        const quotient = generiereZahl(
+          Math.max(1, minWertLinks), 
+          maxWertLinks, 
+          false // Quotient ohne Kommastellen für saubere Division
+        );
         
         ergebnis = quotient;
         zahl1 = reihe * quotient; // Dividend = Divisor × Quotient (damit es aufgeht)
