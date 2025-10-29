@@ -36,21 +36,31 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
       break;
       
     case 'multiplikation':
-      // Bei Multiplikation kleinere Zahlen für Reihen
+      // Bei Multiplikation: Reihe × Faktor (Faktor richtet sich nach Stellen)
       reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
-      const faktor = Math.floor(Math.random() * 12) + 1;
+      
+      // Faktor basierend auf anzahlStellen generieren
+      const maxFaktor = Math.pow(10, Math.max(1, settings.anzahlStellen - 1));
+      const minFaktor = settings.anzahlStellen > 1 ? Math.pow(10, settings.anzahlStellen - 2) : 1;
+      const faktor = Math.floor(Math.random() * (maxFaktor - minFaktor + 1)) + minFaktor;
+      
       zahl1 = reihe;
       zahl2 = faktor;
       ergebnis = zahl1 * zahl2;
       break;
       
     case 'division':
-      // Division: Erst Ergebnis und zweite Zahl, dann erste berechnen
+      // Division: Dividend ÷ Reihe = Quotient (Quotient richtet sich nach Stellen)
       reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
-      const faktorDiv = Math.floor(Math.random() * 12) + 1;
-      zahl1 = reihe * faktorDiv;
+      
+      // Quotient basierend auf anzahlStellen generieren
+      const maxQuotient = Math.pow(10, Math.max(1, settings.anzahlStellen - 1));
+      const minQuotient = settings.anzahlStellen > 1 ? Math.pow(10, settings.anzahlStellen - 2) : 1;
+      const quotient = Math.floor(Math.random() * (maxQuotient - minQuotient + 1)) + minQuotient;
+      
+      ergebnis = quotient;
       zahl2 = reihe;
-      ergebnis = faktorDiv;
+      zahl1 = reihe * quotient; // Dividend = Divisor × Quotient (damit es aufgeht)
       break;
   }
   
