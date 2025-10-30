@@ -23,11 +23,13 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
   const stellenLinks = settings.stellenLinks || settings.anzahlStellen || 2;
   const stellenRechts = settings.stellenRechts || settings.anzahlStellen || 2;
   
+  // Berechne Min/Max für exakte Stellenanzahl
+  // Beispiel: 3 Stellen → min: 100, max: 999
   const maxWertLinks = Math.pow(10, stellenLinks) - 1;
-  const minWertLinks = settings.mitMinuswerten ? -maxWertLinks : 0;
+  const minWertLinks = stellenLinks > 1 ? Math.pow(10, stellenLinks - 1) : 1;
   
   const maxWertRechts = Math.pow(10, stellenRechts) - 1;
-  const minWertRechts = settings.mitMinuswerten ? -maxWertRechts : 0;
+  const minWertRechts = stellenRechts > 1 ? Math.pow(10, stellenRechts - 1) : 1;
   
   switch (operation) {
     case 'addition':
@@ -68,23 +70,22 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
         reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
         zahl2 = reihe;
         
-        // Ergebnis (Quotient) basierend auf stellenLinks generieren
-        // Beispiel: 5 Stellen links → Ergebnis 10000 bis 99999
-        // Dann: Dividend = Divisor × Quotient
-        const quotient = generiereZahl(
-          Math.max(1, minWertLinks), 
-          maxWertLinks, 
-          false // Quotient ohne Kommastellen für saubere Division
-        );
+        // Dividend soll stellenLinks haben
+        // Beispiel: 5 Stellen → 10000 bis 99999
+        // Quotient = Dividend / Divisor
+        // Also: Quotient zwischen (minWertLinks / reihe) und (maxWertLinks / reihe)
+        const minQuotient = Math.floor(minWertLinks / reihe);
+        const maxQuotient = Math.floor(maxWertLinks / reihe);
+        const quotient = Math.floor(Math.random() * (maxQuotient - minQuotient + 1)) + minQuotient;
         
         ergebnis = quotient;
         zahl1 = reihe * quotient; // Dividend = Divisor × Quotient (damit es aufgeht)
       } else {
         // Keine Reihen: Beide Zahlen nach Stellen generieren
         // zahl1 = Vielfaches von zahl2 (damit Division aufgeht)
-        zahl2 = generiereZahl(Math.max(1, minWertRechts), maxWertRechts, false); // Divisor nie 0
+        zahl2 = generiereZahl(minWertRechts, maxWertRechts, false); // Divisor nach stellenRechts
         const maxQuotient = Math.floor(maxWertLinks / Math.max(1, Math.abs(zahl2)));
-        const minQuotient = 1;
+        const minQuotient = Math.max(1, Math.floor(minWertLinks / Math.max(1, Math.abs(zahl2))));
         const quotient = Math.floor(Math.random() * (maxQuotient - minQuotient + 1)) + minQuotient;
         
         ergebnis = quotient;
