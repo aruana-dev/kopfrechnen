@@ -46,16 +46,17 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
       
     case 'multiplikation':
       // Bei Multiplikation: zahl1 (links) × zahl2 (rechts)
-      // Wenn Reihen ausgewählt, dann zahl1 = Reihe
+      // Entscheidung: Reihen ODER Stellen
+      // Wenn Reihen ausgewählt → verwende Reihen
+      // Wenn keine Reihen → verwende Stellen
       if (settings.reihen.length > 0) {
+        // Reihen-Modus: zahl1 = Reihe, zahl2 nach stellenRechts
         reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
         zahl1 = reihe;
-        
-        // zahl2 basierend auf stellenRechts generieren
-        // Beispiel: 3 Stellen → 100 bis 999
         zahl2 = generiereZahl(minWertRechts, maxWertRechts, settings.mitKommastellen);
       } else {
-        // Keine Reihen: Beide Zahlen nach Stellen generieren
+        // Stellen-Modus: Beide Zahlen nach Stellen generieren
+        // Beispiel: 3 Stellen links, 5 Stellen rechts → 726 × 92837
         zahl1 = generiereZahl(minWertLinks, maxWertLinks, settings.mitKommastellen);
         zahl2 = generiereZahl(minWertRechts, maxWertRechts, settings.mitKommastellen);
       }
@@ -65,8 +66,11 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
       
     case 'division':
       // Division: zahl1 (Dividend, links) ÷ zahl2 (Divisor, rechts) = Ergebnis (Quotient)
-      // Wenn Reihen ausgewählt, dann zahl2 = Reihe
+      // Entscheidung: Reihen ODER Stellen
+      // Wenn Reihen ausgewählt → verwende Reihen
+      // Wenn keine Reihen → verwende Stellen
       if (settings.reihen.length > 0) {
+        // Reihen-Modus: zahl2 = Reihe, Dividend nach stellenLinks
         reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
         zahl2 = reihe;
         
@@ -81,15 +85,16 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
         ergebnis = quotient;
         zahl1 = reihe * quotient; // Dividend = Divisor × Quotient (damit es aufgeht)
       } else {
-        // Keine Reihen: Beide Zahlen nach Stellen generieren
-        // zahl1 = Vielfaches von zahl2 (damit Division aufgeht)
+        // Stellen-Modus: Beide Zahlen nach Stellen generieren
+        // zahl1 (Dividend) nach stellenLinks, zahl2 (Divisor) nach stellenRechts
+        // Beispiel: 5 Stellen links, 3 Stellen rechts → 84000 ÷ 742 = 113
         zahl2 = generiereZahl(minWertRechts, maxWertRechts, false); // Divisor nach stellenRechts
         const maxQuotient = Math.floor(maxWertLinks / Math.max(1, Math.abs(zahl2)));
         const minQuotient = Math.max(1, Math.floor(minWertLinks / Math.max(1, Math.abs(zahl2))));
         const quotient = Math.floor(Math.random() * (maxQuotient - minQuotient + 1)) + minQuotient;
         
         ergebnis = quotient;
-        zahl1 = zahl2 * quotient;
+        zahl1 = zahl2 * quotient; // Dividend = Divisor × Quotient (damit es aufgeht)
       }
       break;
   }
