@@ -20,7 +20,7 @@ export default function TeacherPage() {
   const [loading, setLoading] = useState(false);
 
   const [settings, setSettings] = useState<SessionSettings>({
-    reihen: [2, 3, 5],
+    reihen: [], // Standard: Keine Reihen → Stellen werden verwendet
     operationen: ['multiplikation'],
     anzahlAufgaben: 10,
     stellenLinks: 2,
@@ -36,6 +36,7 @@ export default function TeacherPage() {
 
   const handleReiheToggle = (reihe: number) => {
     if (settings.reihen.includes(reihe)) {
+      // Erlaube das Abwählen aller Reihen (dann werden Stellen verwendet)
       setSettings({
         ...settings,
         reihen: settings.reihen.filter(r => r !== reihe),
@@ -46,6 +47,20 @@ export default function TeacherPage() {
         reihen: [...settings.reihen, reihe].sort((a, b) => a - b),
       });
     }
+  };
+
+  const handleAlleReihenAbwaehlen = () => {
+    setSettings({
+      ...settings,
+      reihen: [],
+    });
+  };
+
+  const handleAlleReihenAuswaehlen = () => {
+    setSettings({
+      ...settings,
+      reihen: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    });
   };
 
   const handleOperationToggle = (operation: Operation) => {
@@ -63,10 +78,7 @@ export default function TeacherPage() {
   };
 
   const handleCreateSession = async () => {
-    if (settings.reihen.length === 0) {
-      alert('Bitte mindestens eine Reihe auswählen!');
-      return;
-    }
+    // Reihen sind optional - wenn keine ausgewählt, werden Stellen verwendet
     if (settings.operationen.length === 0) {
       alert('Bitte mindestens eine Operation auswählen!');
       return;
@@ -108,7 +120,30 @@ export default function TeacherPage() {
         <div className="space-y-6">
           {/* Reihen */}
           <div className="kahoot-card">
-            <h2 className="text-2xl font-bold mb-4">Reihen auswählen</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">Reihen auswählen</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAlleReihenAbwaehlen}
+                  className="px-3 py-1 text-sm rounded-lg bg-white/20 hover:bg-white/30 text-white/80 hover:text-white transition-all"
+                >
+                  Alle abwählen
+                </button>
+                <button
+                  onClick={handleAlleReihenAuswaehlen}
+                  className="px-3 py-1 text-sm rounded-lg bg-white/20 hover:bg-white/30 text-white/80 hover:text-white transition-all"
+                >
+                  Alle auswählen
+                </button>
+              </div>
+            </div>
+            {settings.reihen.length === 0 && (
+              <div className="mb-4 p-3 rounded-lg bg-kahoot-blue/30 border border-kahoot-blue/50">
+                <p className="text-sm text-white/90">
+                  ℹ️ Keine Reihen ausgewählt. Die Aufgaben werden nach <strong>Stellen</strong> generiert (siehe Schwierigkeit).
+                </p>
+              </div>
+            )}
             <div className="grid grid-cols-4 md:grid-cols-6 gap-3">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((reihe) => (
                 <motion.button
