@@ -19,6 +19,9 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
   let ergebnis: number;
   let reihe: number | undefined;
   
+  // Sicherstellen, dass reihen ein Array ist
+  const reihen = Array.isArray(settings.reihen) ? settings.reihen : [];
+  
   // Abwärtskompatibilität: Falls anzahlStellen noch verwendet wird
   const stellenLinks = settings.stellenLinks || settings.anzahlStellen || 2;
   const stellenRechts = settings.stellenRechts || settings.anzahlStellen || 2;
@@ -49,9 +52,9 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
       // Entscheidung: Reihen ODER Stellen
       // Wenn Reihen ausgewählt → verwende Reihen
       // Wenn keine Reihen → verwende Stellen
-      if (settings.reihen.length > 0) {
+      if (reihen.length > 0) {
         // Reihen-Modus: zahl1 = Reihe, zahl2 nach stellenRechts
-        reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
+        reihe = reihen[Math.floor(Math.random() * reihen.length)];
         zahl1 = reihe;
         zahl2 = generiereZahl(minWertRechts, maxWertRechts, settings.mitKommastellen);
       } else {
@@ -69,9 +72,9 @@ function generiereAufgabe(operation: Operation, settings: SessionSettings, index
       // Entscheidung: Reihen ODER Stellen
       // Wenn Reihen ausgewählt → verwende Reihen
       // Wenn keine Reihen → verwende Stellen
-      if (settings.reihen.length > 0) {
+      if (reihen.length > 0) {
         // Reihen-Modus: zahl2 = Reihe, Dividend nach stellenLinks
-        reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
+        reihe = reihen[Math.floor(Math.random() * reihen.length)];
         zahl2 = reihe;
         
         // Dividend soll stellenLinks haben

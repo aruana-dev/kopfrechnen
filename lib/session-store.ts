@@ -4,6 +4,7 @@
  */
 
 import { nanoid } from 'nanoid';
+import { generiereAufgaben } from './aufgaben-generator';
 
 export interface SessionTeilnehmer {
   id: string;
@@ -40,11 +41,14 @@ class SessionStore {
     const sessionId = nanoid();
     const code = this.generateCode();
     
+    // Verwende die zentrale Aufgaben-Generierung aus aufgaben-generator.ts
+    const aufgaben = generiereAufgaben(settings);
+    
     const session: Session = {
       id: sessionId,
       code,
       settings,
-      aufgaben: this.generateAufgaben(settings),
+      aufgaben,
       teilnehmer: [],
       status: 'lobby',
       createdAt: Date.now(),
@@ -62,7 +66,7 @@ class SessionStore {
       }
     }
     
-    console.log(`📝 Session erstellt: ${sessionId}, Code: ${code}`);
+    console.log(`📝 Session erstellt: ${sessionId}, Code: ${code}, Aufgaben: ${aufgaben.length}`);
     return { session, code };
   }
 
@@ -195,67 +199,6 @@ class SessionStore {
       code += chars[Math.floor(Math.random() * chars.length)];
     }
     return code;
-  }
-
-  private generateAufgaben(settings: any): any[] {
-    const aufgaben = [];
-    for (let i = 0; i < settings.anzahlAufgaben; i++) {
-      const operation = settings.operationen[Math.floor(Math.random() * settings.operationen.length)];
-      aufgaben.push(this.generateAufgabe(operation, settings, i));
-    }
-    return aufgaben;
-  }
-
-  private generateAufgabe(operation: string, settings: any, index: number): any {
-    let zahl1, zahl2, ergebnis;
-    const maxWert = Math.pow(10, settings.anzahlStellen) - 1;
-    const minWert = settings.mitMinuswerten ? -maxWert : 0;
-
-    switch (operation) {
-      case 'addition':
-        zahl1 = this.generateZahl(minWert, maxWert, settings.mitKommastellen);
-        zahl2 = this.generateZahl(minWert, maxWert, settings.mitKommastellen);
-        ergebnis = this.round(zahl1 + zahl2);
-        break;
-      case 'subtraktion':
-        zahl1 = this.generateZahl(minWert, maxWert, settings.mitKommastellen);
-        zahl2 = this.generateZahl(minWert, maxWert, settings.mitKommastellen);
-        ergebnis = this.round(zahl1 - zahl2);
-        break;
-      case 'multiplikation':
-        const reihe = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
-        const faktor = Math.floor(Math.random() * 12) + 1;
-        zahl1 = reihe;
-        zahl2 = faktor;
-        ergebnis = zahl1 * zahl2;
-        break;
-      case 'division':
-        const reiheDiv = settings.reihen[Math.floor(Math.random() * settings.reihen.length)];
-        const faktorDiv = Math.floor(Math.random() * 12) + 1;
-        zahl1 = reiheDiv * faktorDiv;
-        zahl2 = reiheDiv;
-        ergebnis = faktorDiv;
-        break;
-      default:
-        zahl1 = 0;
-        zahl2 = 0;
-        ergebnis = 0;
-    }
-
-    return { id: nanoid(), operation, zahl1, zahl2, ergebnis, index };
-  }
-
-  private generateZahl(min: number, max: number, mitKommastellen: boolean): number {
-    let zahl = Math.floor(Math.random() * (max - min + 1)) + min;
-    if (mitKommastellen && Math.random() > 0.5) {
-      const kommastellen = Math.floor(Math.random() * 2) + 1;
-      zahl = parseFloat((zahl + Math.random()).toFixed(kommastellen));
-    }
-    return zahl;
-  }
-
-  private round(zahl: number): number {
-    return Math.round(zahl * 100) / 100;
   }
 }
 

@@ -332,7 +332,7 @@ export default function StudentQuiz() {
             className="bg-white/20 backdrop-blur-lg rounded-2xl p-6 mb-3 flex-shrink-0 border-2 border-white/30"
           >
             <p className="text-4xl sm:text-5xl md:text-6xl font-bold text-center text-white">
-              {currentAufgabe.zahl1} {getOperationSymbol(currentAufgabe.operation)} {currentAufgabe.zahl2}
+              {currentAufgabe.zahl1 ?? '?'} {getOperationSymbol(currentAufgabe.operation)} {currentAufgabe.zahl2 ?? '?'}
             </p>
           </motion.div>
         </AnimatePresence>
