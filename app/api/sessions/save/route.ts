@@ -42,9 +42,10 @@ export async function POST(request: NextRequest) {
     });
 
     // Extrahiere Settings aus Aufgaben falls nicht direkt übergeben
+    // TypeScript-kompatible Array-Konvertierung von Sets
     const sessionSettings = settings || (aufgaben && aufgaben.length > 0 ? {
-      operationen: Array.from(new Set(aufgaben.map((a: any) => a.operation))),
-      reihen: Array.from(new Set(aufgaben.map((a: any) => a.reihe).filter((r: any) => r))),
+      operationen: Array.from(new Set(aufgaben.map((a: any) => a.operation))) as string[],
+      reihen: Array.from(new Set(aufgaben.map((a: any) => a.reihe).filter((r: any) => r))) as number[],
       anzahlAufgaben: aufgaben.length,
       tempo: { vorgegeben: false, sekunden: 0 },
       direktWeiter: false,
